@@ -25,6 +25,7 @@ export default function Chat() {
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [secondsUsed, setSecondsUsed] = useState(0)
   const [lang, setLang] = useState('fr')
+  const [initError, setInitError] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -81,11 +82,15 @@ export default function Chat() {
     }
 
     if (!conv) {
-      const { data: newConv } = await supabase.from('conversations').insert({
+      const { data: newConv, error: convErr } = await supabase.from('conversations').insert({
         user_id: user.id,
         ai_config_id: config.id,
         started_at: new Date().toISOString(),
       }).select().single()
+      if (convErr) {
+        console.error('conversation create error:', convErr)
+        setInitError(`Conv error: ${convErr.message || convErr.code}`)
+      }
       conv = newConv
     }
 
@@ -282,6 +287,9 @@ export default function Chat() {
             <p style={{ color: 'var(--text3)', fontSize: 14, marginTop: 16 }}>
               {fr ? `Dites bonjour à ${aiName} pour commencer...` : `Say hello to ${aiName} to get started...`}
             </p>
+            {initError && (
+              <p style={{ color: '#EC4899', fontSize: 12, marginTop: 8 }}>[INIT] {initError}</p>
+            )}
           </div>
         )}
 
