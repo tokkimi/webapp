@@ -75,11 +75,15 @@ export default function Profile() {
   async function handleSaveAi() {
     if (!user || !gender || !personality) return
     setSavingAi(true)
-    await supabase.from('ai_config').upsert({
-      user_id: user.id,
-      gender, personality, hair, eyes, build, style,
-      updated_at: new Date().toISOString(),
-    })
+    const payload = { user_id: user.id, gender, personality, hair, eyes, build, style, updated_at: new Date().toISOString() }
+    const { data: existing } = await supabase.from('ai_config').select('id').eq('user_id', user.id).single()
+    if (existing) {
+      await supabase.from('ai_config').update(payload).eq('user_id', user.id)
+    } else {
+      const name = user.user_metadata?.name || user.email?.split('@')[0] || 'User'
+      await supabase.from('profiles').upsert({ id: user.id, email: user.email, name }, { onConflict: 'id', ignoreDuplicates: true })
+      await supabase.from('ai_config').insert(payload)
+    }
     setSavingAi(false)
     setSavedAi(true)
     setTimeout(() => setSavedAi(false), 2500)

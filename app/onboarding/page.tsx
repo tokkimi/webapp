@@ -58,7 +58,12 @@ export default function Onboarding() {
     if (!user) { router.replace('/'); return }
 
     // Ensure profile exists (required by ai_config foreign key)
-    await supabase.from('profiles').upsert({ id: user.id, email: user.email }, { onConflict: 'id' })
+    // Use ignoreDuplicates so existing profiles are not touched
+    const name = user.user_metadata?.name || user.email?.split('@')[0] || 'User'
+    await supabase.from('profiles').upsert(
+      { id: user.id, email: user.email, name },
+      { onConflict: 'id', ignoreDuplicates: true }
+    )
 
     // Try insert first, fall back to update if record exists
     const payload = {
