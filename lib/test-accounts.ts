@@ -1,5 +1,5 @@
 // Test accounts with full Elite access — no Stripe needed
-export const TEST_EMAILS = ['test@bluecircle.app', 'demo@bluecircle.app']
+export const TEST_EMAILS = ['goocciland@gmail.com']
 
 export const TEST_SUBSCRIPTION = {
   plan_id: 'elite',

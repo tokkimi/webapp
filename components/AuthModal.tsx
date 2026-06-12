@@ -52,22 +52,6 @@ export default function AuthModal({ mode, lang, onClose, onSwitch }: AuthModalPr
     </svg>
   )
 
-  async function handleTestLogin() {
-    setLoading(true)
-    setError('')
-    try {
-      const res = await fetch('/api/test-login', { method: 'POST' })
-      const { access_token, refresh_token, error: err } = await res.json()
-      if (err) { setError('Erreur test: ' + err); setLoading(false); return }
-      await supabase.auth.setSession({ access_token, refresh_token })
-      onClose()
-      window.location.href = '/onboarding'
-    } catch {
-      setError('Connexion test impossible')
-      setLoading(false)
-    }
-  }
-
   return (
     <div onClick={onClose} style={{
       position: 'fixed', inset: 0, zIndex: 200,
@@ -94,7 +78,6 @@ export default function AuthModal({ mode, lang, onClose, onSwitch }: AuthModalPr
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
 
-        {/* Header */}
         <div style={{ marginBottom: 28 }}>
           <h2 style={{ fontFamily: 'Playfair Display, serif', fontSize: 26, marginBottom: 6, color: 'var(--text)' }}>
             {mode === 'register' ? (fr ? 'Créer un compte' : 'Create account') : (fr ? 'Bon retour' : 'Welcome back')}
@@ -110,10 +93,8 @@ export default function AuthModal({ mode, lang, onClose, onSwitch }: AuthModalPr
           <div style={{ textAlign: 'center', padding: '16px 0' }}>
             <div style={{
               width: 56, height: 56, borderRadius: '50%',
-              background: 'rgba(37,99,235,0.1)',
-              border: '1px solid rgba(37,99,235,0.25)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 16px',
+              background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.25)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
             }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
@@ -135,8 +116,7 @@ export default function AuthModal({ mode, lang, onClose, onSwitch }: AuthModalPr
                   {fr ? 'Prénom' : 'First name'}
                 </label>
                 <input value={name} onChange={e => setName(e.target.value)} required
-                  className="input-field"
-                  placeholder={fr ? 'Votre prénom' : 'Your first name'} />
+                  className="input-field" placeholder={fr ? 'Votre prénom' : 'Your first name'} />
               </div>
             )}
             <div>
@@ -144,8 +124,7 @@ export default function AuthModal({ mode, lang, onClose, onSwitch }: AuthModalPr
                 Email
               </label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
-                className="input-field"
-                placeholder="you@example.com" />
+                className="input-field" placeholder="you@example.com" />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text3)', marginBottom: 6, fontWeight: 500 }}>
@@ -153,9 +132,7 @@ export default function AuthModal({ mode, lang, onClose, onSwitch }: AuthModalPr
               </label>
               <div style={{ position: 'relative' }}>
                 <input type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} required
-                  className="input-field"
-                  style={{ paddingRight: 44 }}
-                  placeholder="••••••••" />
+                  className="input-field" style={{ paddingRight: 44 }} placeholder="••••••••" />
                 <button type="button" onClick={() => setShowPass(!showPass)} style={{
                   position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
                   background: 'none', border: 'none', color: 'var(--text3)', cursor: 'pointer',
@@ -173,8 +150,7 @@ export default function AuthModal({ mode, lang, onClose, onSwitch }: AuthModalPr
                   {fr ? 'Confirmer le mot de passe' : 'Confirm password'}
                 </label>
                 <input type={showPass ? 'text' : 'password'} value={confirm} onChange={e => setConfirm(e.target.value)} required
-                  className="input-field"
-                  placeholder="••••••••" />
+                  className="input-field" placeholder="••••••••" />
               </div>
             )}
             {error && (
@@ -199,28 +175,7 @@ export default function AuthModal({ mode, lang, onClose, onSwitch }: AuthModalPr
         )}
 
         {!success && (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0' }}>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-              <span style={{ fontSize: 12, color: 'var(--text3)' }}>{fr ? 'ou' : 'or'}</span>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-            </div>
-            <button type="button" onClick={handleTestLogin} disabled={loading} style={{
-              width: '100%', padding: '13px', marginBottom: 16,
-              background: 'rgba(236,72,153,0.08)', border: '1px solid rgba(236,72,153,0.25)',
-              borderRadius: 12, color: '#EC4899', fontFamily: 'DM Sans, sans-serif',
-              fontWeight: 500, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
-              </svg>
-              {fr ? 'Accès démo instantané (sans email)' : 'Instant demo access (no email)'}
-            </button>
-          </>
-        )}
-        {!success && (
-          <p style={{ textAlign: 'center', marginTop: 4, fontSize: 13, color: 'var(--text3)' }}>
+          <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--text3)' }}>
             {mode === 'register' ? (fr ? 'Déjà un compte ? ' : 'Already have an account? ') : (fr ? 'Pas encore de compte ? ' : 'No account yet? ')}
             <button onClick={() => onSwitch(mode === 'register' ? 'login' : 'register')}
               style={{ background: 'none', border: 'none', color: 'var(--accent-h)', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', fontSize: 13, fontWeight: 500 }}>
