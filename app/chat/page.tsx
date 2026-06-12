@@ -26,6 +26,7 @@ export default function Chat() {
   const [lang, setLang] = useState('fr')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const supabase = createSupabaseBrowserClient()
   const router = useRouter()
 
@@ -38,6 +39,14 @@ export default function Chat() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const ta = textareaRef.current
+    if (!ta) return
+    ta.style.height = 'auto'
+    ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'
+  }, [input])
 
   async function init() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -52,7 +61,6 @@ export default function Chat() {
     if (!config) { router.push('/onboarding'); return }
     setAiConfig(config)
 
-    // Load or create conversation
     let conv = null
     if (sub.plan_id !== 'premium' && sub.plan_id !== 'elite') {
       const { data: existingConv } = await supabase
@@ -84,7 +92,6 @@ export default function Chat() {
       setMessages(msgs || [])
     }
 
-    // Timer for limited plans
     if (sub.plan_id === 'essentiel' || sub.plan_id === 'premium') {
       const today = new Date().toISOString().split('T')[0]
       const { data: usage } = await supabase
@@ -102,17 +109,12 @@ export default function Chat() {
     if (!user || !subscription) return
     if (subscription.plan_id !== 'essentiel' && subscription.plan_id !== 'premium') return
     const today = new Date().toISOString().split('T')[0]
-    await supabase.from('daily_usage').upsert({
-      user_id: user.id,
-      date: today,
-      seconds_used: secondsUsed,
-    })
+    await supabase.from('daily_usage').upsert({ user_id: user.id, date: today, seconds_used: secondsUsed })
   }
 
   async function sendMessage() {
     if (!input.trim() || loading || !conversationId) return
-    const limit = 3600
-    if ((subscription?.plan_id === 'essentiel' || subscription?.plan_id === 'premium') && secondsUsed >= limit) return
+    if ((subscription?.plan_id === 'essentiel' || subscription?.plan_id === 'premium') && secondsUsed >= 3600) return
 
     const userMsg: Message = { role: 'user', content: input.trim(), type: 'text' }
     setMessages(prev => [...prev, userMsg])
@@ -127,8 +129,7 @@ export default function Chat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: [...messages, userMsg].map(m => ({ role: m.role, content: m.content })),
-          aiConfig,
-          lang,
+          aiConfig, lang,
         }),
       })
       const { reply, generatePhoto } = await res.json()
@@ -137,9 +138,8 @@ export default function Chat() {
       setMessages(prev => [...prev, aiMsg])
       await supabase.from('messages').insert({ conversation_id: conversationId, role: 'assistant', content: reply, type: 'text' })
 
-      // Generate photo if triggered and plan allows
       if (generatePhoto && (subscription?.plan_id === 'premium' || subscription?.plan_id === 'elite')) {
-        const placeholder: Message = { role: 'assistant', content: '📸', type: 'image' }
+        const placeholder: Message = { role: 'assistant', content: '', type: 'image' }
         setMessages(prev => [...prev, placeholder])
         const photoRes = await fetch('/api/generate-photo', {
           method: 'POST',
@@ -155,7 +155,11 @@ export default function Chat() {
         }
       }
     } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: lang === 'fr' ? 'Désolée, une erreur est survenue...' : 'Sorry, an error occurred...', type: 'text' }])
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: lang === 'fr' ? 'Désolée, une erreur est survenue...' : 'Sorry, an error occurred...',
+        type: 'text',
+      }])
     }
 
     setLoading(false)
@@ -168,120 +172,154 @@ export default function Chat() {
   }
 
   const aiName = aiConfig?.gender === 'woman' ? 'Luna' : 'Axel'
-  const aiEmoji = aiConfig?.gender === 'woman' ? '🌙' : '🌊'
   const fr = lang === 'fr'
   const timeLimit = 3600
   const timeLeft = Math.max(0, timeLimit - secondsUsed)
   const hasTimer = subscription?.plan_id === 'essentiel' || subscription?.plan_id === 'premium'
-  const h = Math.floor(timeLeft / 3600)
-  const m = Math.floor((timeLeft % 3600) / 60)
-  const s = timeLeft % 60
-  const timerStr = `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+  const timerStr = `${Math.floor(timeLeft / 3600)}:${String(Math.floor((timeLeft % 3600) / 60)).padStart(2, '0')}:${String(timeLeft % 60).padStart(2, '0')}`
+  const timerPct = (timeLeft / timeLimit) * 100
+
+  const AiAvatar = ({ size = 36 }: { size?: number }) => (
+    <div style={{
+      width: size, height: size, borderRadius: '50%', flexShrink: 0,
+      background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontSize: size * 0.45,
+      boxShadow: '0 0 12px rgba(37,99,235,0.3)',
+    }}>
+      {aiConfig?.gender === 'woman' ? '🌙' : '🌊'}
+    </div>
+  )
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)' }}>
-      {/* Chat Header */}
+
+      {/* Header */}
       <div style={{
-        background: 'var(--surface)', borderBottom: '1px solid var(--border)',
-        padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        background: 'rgba(7,10,23,0.95)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid var(--border)',
+        padding: '12px 20px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ position: 'relative' }}>
+            <AiAvatar size={42} />
             <div style={{
-              width: 44, height: 44, borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--accent), var(--accent2))',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 20,
-            }}>{aiEmoji}</div>
-            <div style={{
-              position: 'absolute', bottom: 1, right: 1, width: 10, height: 10,
-              borderRadius: '50%', background: '#22C55E',
-              border: '2px solid var(--surface)',
+              position: 'absolute', bottom: 1, right: 1,
+              width: 10, height: 10, borderRadius: '50%',
+              background: '#22C55E', border: '2px solid var(--bg)',
             }} />
           </div>
           <div>
-            <div style={{ fontFamily: 'DM Sans, sans-serif', fontWeight: 600, fontSize: 15 }}>{aiName}</div>
-            <div style={{ fontSize: 12, color: '#22C55E' }}>{fr ? 'En ligne' : 'Online'}</div>
+            <div style={{ fontWeight: 600, fontSize: 15 }}>{aiName}</div>
+            <div style={{ fontSize: 12, color: '#22C55E', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span className="dot-pulse" style={{ width: 5, height: 5, borderRadius: '50%', background: '#22C55E', display: 'inline-block' }} />
+              {fr ? 'En ligne' : 'Online'}
+            </div>
           </div>
         </div>
+
         {hasTimer && (
-          <div style={{
-            fontFamily: 'DM Mono, monospace', fontSize: 14,
-            background: 'var(--bg3)', border: '1px solid var(--border)',
-            borderRadius: 100, padding: '6px 14px', color: timeLeft < 300 ? 'var(--accent3)' : 'var(--text)',
-          }}>
-            {timerStr}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+            <div style={{
+              fontFamily: 'DM Mono, monospace', fontSize: 13,
+              color: timeLeft < 300 ? 'var(--accent3)' : 'var(--text2)',
+            }}>
+              {timerStr}
+            </div>
+            <div style={{ width: 80, height: 3, background: 'var(--border2)', borderRadius: 2, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', borderRadius: 2,
+                width: `${timerPct}%`,
+                background: timeLeft < 300 ? 'var(--accent3)' : 'var(--accent)',
+                transition: 'width 1s linear',
+              }} />
+            </div>
           </div>
         )}
       </div>
 
       {/* Messages */}
       <div className="chat-scroll" style={{
-        flex: 1, overflowY: 'auto', padding: '20px',
-        display: 'flex', flexDirection: 'column', gap: 16,
+        flex: 1, overflowY: 'auto', padding: '24px 16px',
+        display: 'flex', flexDirection: 'column', gap: 20,
+        paddingBottom: 16,
       }}>
-        {messages.length === 0 && (
-          <div style={{ textAlign: 'center', color: 'var(--text3)', marginTop: 40, fontSize: 14 }}>
-            {fr ? `Dites bonjour à ${aiName}...` : `Say hello to ${aiName}...`}
+        {messages.length === 0 && !loading && (
+          <div style={{ textAlign: 'center', marginTop: 60 }}>
+            <AiAvatar size={56} />
+            <p style={{ color: 'var(--text3)', fontSize: 14, marginTop: 16 }}>
+              {fr ? `Dites bonjour à ${aiName} pour commencer...` : `Say hello to ${aiName} to get started...`}
+            </p>
           </div>
         )}
+
         {messages.map((msg, i) => (
-          <div key={i} className="fade-up" style={{
-            display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+          <div key={i} className="fade-in" style={{
+            display: 'flex',
+            justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
             alignItems: 'flex-end', gap: 8,
           }}>
-            {msg.role === 'assistant' && (
-              <div style={{
-                width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-                background: 'linear-gradient(135deg, var(--accent), var(--accent2))',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
-              }}>{aiEmoji}</div>
-            )}
-            <div>
+            {msg.role === 'assistant' && <AiAvatar size={28} />}
+
+            <div style={{ maxWidth: '75%' }}>
               {msg.type === 'image' ? (
                 msg.image_url ? (
-                  <img src={msg.image_url} alt="" style={{ width: 300, height: 300, objectFit: 'cover', borderRadius: 12 }} />
+                  <img src={msg.image_url} alt="" style={{
+                    width: 280, height: 280, objectFit: 'cover',
+                    borderRadius: 16, display: 'block',
+                    border: '1px solid var(--border2)',
+                  }} />
                 ) : (
                   <div style={{
-                    width: 300, height: 300, borderRadius: 12, background: 'var(--surface)',
+                    width: 280, height: 280, borderRadius: 16,
+                    background: 'var(--surface2)',
+                    border: '1px solid var(--border)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexDirection: 'column', gap: 10,
                   }}>
-                    <div className="spinner" style={{ width: 32, height: 32, border: '3px solid var(--border)', borderTopColor: 'var(--accent)', borderRadius: '50%' }} />
+                    <div className="spinner" style={{ width: 28, height: 28, border: '2px solid var(--border2)', borderTopColor: 'var(--accent)', borderRadius: '50%' }} />
+                    <span style={{ fontSize: 12, color: 'var(--text3)' }}>{fr ? 'Génération...' : 'Generating...'}</span>
                   </div>
                 )
               ) : (
                 <div style={{
-                  maxWidth: 320, padding: '12px 16px',
-                  background: msg.role === 'user' ? 'var(--accent)' : 'var(--surface2)',
+                  padding: '11px 15px', lineHeight: 1.55, fontSize: 14,
+                  background: msg.role === 'user'
+                    ? 'linear-gradient(135deg, var(--accent) 0%, #1D4ED8 100%)'
+                    : 'var(--surface2)',
                   border: msg.role === 'assistant' ? '1px solid var(--border)' : 'none',
                   borderRadius: msg.role === 'user' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                  color: '#fff', fontSize: 14, lineHeight: 1.5,
+                  color: '#fff',
+                  boxShadow: msg.role === 'user' ? '0 4px 16px rgba(37,99,235,0.25)' : 'none',
                 }}>
                   {msg.content}
                 </div>
               )}
-              <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 4, textAlign: msg.role === 'user' ? 'right' : 'left' }}>
-                {msg.created_at ? new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-              </div>
+              {msg.created_at && (
+                <div style={{ fontSize: 10, color: 'var(--text3)', marginTop: 5, textAlign: msg.role === 'user' ? 'right' : 'left' }}>
+                  {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>
+              )}
             </div>
           </div>
         ))}
+
         {loading && (
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+          <div className="fade-in" style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+            <AiAvatar size={28} />
             <div style={{
-              width: 30, height: 30, borderRadius: '50%', flexShrink: 0,
-              background: 'linear-gradient(135deg, var(--accent), var(--accent2))',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14,
-            }}>{aiEmoji}</div>
-            <div style={{
-              padding: '12px 16px', background: 'var(--surface2)',
-              border: '1px solid var(--border)', borderRadius: '18px 18px 18px 4px',
+              padding: '13px 16px',
+              background: 'var(--surface2)', border: '1px solid var(--border)',
+              borderRadius: '18px 18px 18px 4px',
               display: 'flex', gap: 5, alignItems: 'center',
             }}>
               {[0, 1, 2].map(i => (
-                <span key={i} className={`typing-dot`} style={{
-                  width: 6, height: 6, borderRadius: '50%', background: 'var(--text3)', display: 'block',
+                <span key={i} className="typing-dot" style={{
+                  width: 5, height: 5, borderRadius: '50%', background: 'var(--text3)', display: 'block',
                 }} />
               ))}
             </div>
@@ -292,33 +330,61 @@ export default function Chat() {
 
       {/* Input */}
       <div style={{
-        background: 'var(--surface)', borderTop: '1px solid var(--border)',
-        padding: '16px 20px', display: 'flex', gap: 10, alignItems: 'flex-end',
-        flexShrink: 0, paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
+        background: 'rgba(7,10,23,0.98)',
+        backdropFilter: 'blur(20px)',
+        borderTop: '1px solid var(--border)',
+        padding: '12px 16px',
+        paddingBottom: 'calc(60px + 12px + env(safe-area-inset-bottom))',
+        display: 'flex', gap: 10, alignItems: 'flex-end',
+        flexShrink: 0,
       }}>
         <textarea
+          ref={textareaRef}
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={loading || (hasTimer && timeLeft === 0)}
-          placeholder={hasTimer && timeLeft === 0 ? (fr ? 'Temps écoulé pour aujourd\'hui' : 'Time limit reached') : (fr ? 'Écrivez un message...' : 'Write a message...')}
-          style={{
-            flex: 1, background: 'var(--bg3)', border: '1px solid var(--border)',
-            borderRadius: 12, padding: '10px 14px', color: 'var(--text)',
-            fontSize: 14, fontFamily: 'DM Sans, sans-serif', resize: 'none',
-            minHeight: 44, maxHeight: 120, outline: 'none',
-            transition: 'border-color 0.2s',
-          }}
+          placeholder={
+            hasTimer && timeLeft === 0
+              ? (fr ? 'Temps écoulé pour aujourd\'hui' : 'Time limit reached')
+              : (fr ? 'Écrire un message...' : 'Write a message...')
+          }
           rows={1}
+          style={{
+            flex: 1, background: 'var(--surface2)',
+            border: '1px solid var(--border2)',
+            borderRadius: 14, padding: '11px 14px',
+            color: 'var(--text)', fontSize: 14,
+            fontFamily: 'DM Sans, sans-serif', resize: 'none',
+            minHeight: 44, maxHeight: 120, outline: 'none',
+            lineHeight: 1.5,
+            transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+          }}
+          onFocus={e => { e.currentTarget.style.borderColor = 'rgba(37,99,235,0.5)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(37,99,235,0.1)' }}
+          onBlur={e => { e.currentTarget.style.borderColor = 'var(--border2)'; e.currentTarget.style.boxShadow = 'none' }}
         />
-        <button onClick={sendMessage} disabled={loading || !input.trim() || (hasTimer && timeLeft === 0)} style={{
-          width: 44, height: 44, background: 'var(--accent)', border: 'none',
-          borderRadius: 12, color: '#fff', fontSize: 18, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          transition: 'all 0.2s ease', flexShrink: 0,
-          opacity: (loading || !input.trim()) ? 0.5 : 1,
-        }}>➤</button>
+        <button
+          onClick={sendMessage}
+          disabled={loading || !input.trim() || (hasTimer && timeLeft === 0)}
+          style={{
+            width: 44, height: 44, flexShrink: 0,
+            background: loading || !input.trim() ? 'var(--surface2)' : 'var(--accent)',
+            border: '1px solid ' + (loading || !input.trim() ? 'var(--border)' : 'transparent'),
+            borderRadius: 12, color: '#fff', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.2s ease',
+            boxShadow: !loading && input.trim() ? '0 0 16px rgba(37,99,235,0.35)' : 'none',
+          }}>
+          {loading
+            ? <span className="spinner" style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%' }} />
+            : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+          }
+        </button>
       </div>
+
       <BottomNav lang={lang} />
     </div>
   )
