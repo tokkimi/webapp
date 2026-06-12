@@ -256,9 +256,10 @@ export default function Chat() {
 
       {/* Messages */}
       <div className="chat-scroll" style={{
-        flex: 1, overflowY: 'auto', padding: '24px 16px',
+        flex: 1, overflowY: 'auto', overflowX: 'hidden',
+        padding: '24px 16px 16px 16px',
         display: 'flex', flexDirection: 'column', gap: 20,
-        paddingBottom: 16,
+        boxSizing: 'border-box', width: '100%',
       }}>
         {messages.length === 0 && !loading && (
           <div style={{ textAlign: 'center', marginTop: 60 }}>
@@ -277,7 +278,7 @@ export default function Chat() {
           }}>
             {msg.role === 'assistant' && <AiAvatar size={28} />}
 
-            <div style={{ maxWidth: '75%' }}>
+            <div style={{ maxWidth: '75%', minWidth: 0 }}>
               {msg.type === 'image' ? (
                 msg.image_url ? (
                   <img src={msg.image_url} alt="" style={{
