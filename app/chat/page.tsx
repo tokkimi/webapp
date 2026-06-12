@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import BottomNav from '@/components/BottomNav'
+import { isTestAccount, TEST_SUBSCRIPTION } from '@/lib/test-accounts'
 
 interface Message {
   id?: string
@@ -53,7 +54,13 @@ export default function Chat() {
     if (!user) { router.push('/'); return }
     setUser(user)
 
-    const { data: sub } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('status', 'active').single()
+    let sub: any = null
+    if (isTestAccount(user.email)) {
+      sub = TEST_SUBSCRIPTION
+    } else {
+      const { data } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('status', 'active').single()
+      sub = data
+    }
     if (!sub) { router.push('/'); return }
     setSubscription(sub)
 

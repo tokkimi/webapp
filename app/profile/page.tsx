@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import BottomNav from '@/components/BottomNav'
+import { isTestAccount, TEST_SUBSCRIPTION } from '@/lib/test-accounts'
 
 const HAIR  = ['Brun', 'Blond', 'Roux', 'Noir', 'Châtain']
 const EYES  = ['Marron', 'Bleu', 'Vert', 'Gris', 'Noisette']
@@ -47,12 +48,13 @@ export default function Profile() {
     if (!user) { router.push('/'); return }
     setUser(user)
 
-    const [{ data: prof }, { data: sub }, { data: notifs }, { data: cfg }] = await Promise.all([
+    const [{ data: prof }, { data: subFromDb }, { data: notifs }, { data: cfg }] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', user.id).single(),
       supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('status', 'active').single(),
       supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
       supabase.from('ai_config').select('*').eq('user_id', user.id).single(),
     ])
+    const sub = isTestAccount(user.email) ? TEST_SUBSCRIPTION : subFromDb
     setProfile(prof)
     setSubscription(sub)
     setNotifications(notifs || [])
