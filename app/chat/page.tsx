@@ -166,10 +166,10 @@ export default function Chat() {
           setMessages(prev => prev.slice(0, -1))
         }
       }
-    } catch {
+    } catch (e: any) {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: lang === 'fr' ? 'Désolée, une erreur est survenue...' : 'Sorry, an error occurred...',
+        content: `[DEBUG] ${e?.message || String(e)}`,
         type: 'text',
       }])
     }
