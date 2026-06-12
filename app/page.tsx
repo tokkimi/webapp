@@ -6,6 +6,8 @@ import Navbar from '@/components/Navbar'
 import AuthModal from '@/components/AuthModal'
 import BottomNav from '@/components/BottomNav'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
+import { isTestAccount } from '@/lib/test-accounts'
+import { useRouter } from 'next/navigation'
 import { PLANS } from '@/lib/stripe'
 
 export default function Home() {
@@ -17,10 +19,23 @@ export default function Home() {
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const supabase = createSupabaseBrowserClient()
 
+  const router = useRouter()
+
   useEffect(() => {
     setAgeVerified(!!localStorage.getItem('age_verified'))
     setLang(localStorage.getItem('lang') || 'fr')
-    supabase.auth.getUser().then(({ data }: any) => setUser(data.user))
+    supabase.auth.getUser().then(async ({ data }: any) => {
+      const u = data.user
+      setUser(u)
+      if (!u) return
+      // Redirect logged-in users straight to the app
+      const { data: config } = await supabase.from('ai_config').select('id').eq('user_id', u.id).single()
+      if (config) {
+        router.replace('/chat')
+      } else if (isTestAccount(u.email)) {
+        router.replace('/onboarding')
+      }
+    })
   }, [])
 
   function toggleLang() {
