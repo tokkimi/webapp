@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 import { usePathname } from 'next/navigation'
 
 interface BottomNavProps { lang: string }
@@ -23,7 +24,7 @@ const ProfileIcon = () => (
   </svg>
 )
 
-const icons: Record<string, () => JSX.Element> = {
+const icons: Record<string, () => React.ReactElement> = {
   '/': HomeIcon,
   '/chat': ChatIcon,
   '/profile': ProfileIcon,
