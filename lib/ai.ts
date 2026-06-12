@@ -63,10 +63,23 @@ export function buildReplicatePrompt(config: {
   personality?: string
 }) {
   const genderWord = config.gender === 'woman' ? 'woman' : 'man'
-  const hairDesc = config.hair ? config.hair.toLowerCase() : 'dark'
-  const eyesDesc = config.eyes ? config.eyes.toLowerCase() : 'brown'
-  const buildDesc = config.build ? config.build.toLowerCase() : 'athletic'
-  const styleDesc = config.style ? config.style.toLowerCase() : 'elegant'
+  const hairMap: Record<string, string> = { brun: 'brunette', blond: 'blonde', roux: 'redhead', noir: 'black hair', châtain: 'chestnut hair', platine: 'platinum blonde' }
+  const eyesMap: Record<string, string> = { marron: 'brown eyes', bleu: 'blue eyes', vert: 'green eyes', gris: 'grey eyes', noisette: 'hazel eyes' }
+  const buildMap: Record<string, string> = { mince: 'slim', athlétique: 'athletic', sportif: 'fit toned', pulpeuse: 'curvy voluptuous', enrobé: 'full-figured' }
+  const styleMap: Record<string, string> = {
+    casual: 'casual everyday outfit',
+    élégant: 'elegant evening wear',
+    sportif: 'sporty activewear',
+    lingerie: 'seductive lingerie, lace bra and panties',
+    latex: 'shiny latex bodysuit, tight latex outfit',
+    cuir: 'leather outfit, black leather corset and pants',
+    soubrette: 'maid outfit, frilly apron dress',
+    alternatif: 'alternative fashion, edgy dark style',
+  }
+  const hairDesc = hairMap[config.hair?.toLowerCase() ?? ''] ?? config.hair?.toLowerCase() ?? 'dark hair'
+  const eyesDesc = eyesMap[config.eyes?.toLowerCase() ?? ''] ?? config.eyes?.toLowerCase() ?? 'brown eyes'
+  const buildDesc = buildMap[config.build?.toLowerCase() ?? ''] ?? config.build?.toLowerCase() ?? 'athletic'
+  const styleDesc = styleMap[config.style?.toLowerCase() ?? ''] ?? config.style?.toLowerCase() ?? 'elegant fashion'
 
   const pose = config.personality === 'dominant'
     ? 'confident seductive pose, intense direct gaze, commanding expression'
