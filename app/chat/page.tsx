@@ -139,7 +139,12 @@ export default function Chat() {
           aiConfig, lang,
         }),
       })
-      const { reply, generatePhoto } = await res.json()
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        console.error('Chat API error:', data.error)
+        throw new Error(data.error || 'API error')
+      }
+      const { reply, generatePhoto } = data
 
       const aiMsg: Message = { role: 'assistant', content: reply, type: 'text' }
       setMessages(prev => [...prev, aiMsg])
