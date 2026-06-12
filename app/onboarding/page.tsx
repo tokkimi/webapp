@@ -57,7 +57,8 @@ export default function Onboarding() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.replace('/'); return }
 
-    const { error: err } = await supabase.from('ai_config').upsert({
+    // Try insert first, fall back to update if record exists
+    const payload = {
       user_id: user.id,
       gender, personality,
       hair:  hair  || null,
@@ -65,7 +66,17 @@ export default function Onboarding() {
       build: build || null,
       style: style || null,
       updated_at: new Date().toISOString(),
-    })
+    }
+    const { data: existing2 } = await supabase.from('ai_config').select('id').eq('user_id', user.id).single()
+    let err: any
+    if (existing2) {
+      const res = await supabase.from('ai_config').update(payload).eq('user_id', user.id)
+      err = res.error
+    } else {
+      const res = await supabase.from('ai_config').insert(payload)
+      err = res.error
+    }
+    if (err) console.error('ai_config save error:', err)
 
     if (err) {
       setError(fr ? 'Erreur lors de la sauvegarde. Réessayez.' : 'Save failed. Please try again.')
