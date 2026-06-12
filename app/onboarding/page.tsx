@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import { isTestAccount, TEST_SUBSCRIPTION } from '@/lib/test-accounts'
 
 const HAIR = ['Brun', 'Blond', 'Roux', 'Noir', 'Châtain']
 const EYES = ['Marron', 'Bleu', 'Vert', 'Gris', 'Noisette']
@@ -27,7 +28,13 @@ export default function Onboarding() {
     async function checkAccess() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/'); return }
-      const { data: sub } = await supabase.from('subscriptions').select('plan_id').eq('user_id', user.id).eq('status', 'active').single()
+      let sub: any = null
+      if (isTestAccount(user.email)) {
+        sub = TEST_SUBSCRIPTION
+      } else {
+        const { data } = await supabase.from('subscriptions').select('plan_id').eq('user_id', user.id).eq('status', 'active').single()
+        sub = data
+      }
       if (!sub) { router.push('/'); return }
       setPlan(sub.plan_id)
       if (['essentiel', 'illimite'].includes(sub.plan_id)) {
