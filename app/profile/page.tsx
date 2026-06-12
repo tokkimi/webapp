@@ -90,6 +90,12 @@ export default function Profile() {
     router.push('/')
   }
 
+  async function handleResetPartner() {
+    if (!user) return
+    await supabase.from('ai_config').delete().eq('user_id', user.id)
+    router.push('/onboarding')
+  }
+
   async function handlePortal() {
     setLoadingPortal(true)
     const res = await fetch('/api/stripe/portal', { method: 'POST' })
@@ -374,6 +380,15 @@ export default function Profile() {
             <Section title={fr ? 'Compte' : 'Account'}>
               <p style={{ color: 'var(--text3)', fontSize: 13, marginBottom: 16 }}>{user?.email}</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <button onClick={handleResetPartner} style={{
+                  width: '100%', background: 'rgba(37,99,235,0.08)',
+                  border: '1px solid rgba(37,99,235,0.25)', borderRadius: 12,
+                  color: 'var(--accent-h)', padding: '12px',
+                  fontFamily: 'DM Sans, sans-serif', fontSize: 14, cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}>
+                  {fr ? '🔄 Changer de partenaire' : '🔄 Change partner'}
+                </button>
                 <button onClick={handleLogout} className="btn-ghost" style={{ width: '100%', padding: '12px' }}>
                   {fr ? 'Se déconnecter' : 'Sign out'}
                 </button>

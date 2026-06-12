@@ -234,24 +234,39 @@ export default function Chat() {
           </div>
         </div>
 
-        {hasTimer && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-            <div style={{
-              fontFamily: 'DM Mono, monospace', fontSize: 13,
-              color: timeLeft < 300 ? 'var(--accent3)' : 'var(--text2)',
-            }}>
-              {timerStr}
-            </div>
-            <div style={{ width: 80, height: 3, background: 'var(--border2)', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {hasTimer && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
               <div style={{
-                height: '100%', borderRadius: 2,
-                width: `${timerPct}%`,
-                background: timeLeft < 300 ? 'var(--accent3)' : 'var(--accent)',
-                transition: 'width 1s linear',
-              }} />
+                fontFamily: 'DM Mono, monospace', fontSize: 13,
+                color: timeLeft < 300 ? 'var(--accent3)' : 'var(--text2)',
+              }}>
+                {timerStr}
+              </div>
+              <div style={{ width: 80, height: 3, background: 'var(--border2)', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', borderRadius: 2,
+                  width: `${timerPct}%`,
+                  background: timeLeft < 300 ? 'var(--accent3)' : 'var(--accent)',
+                  transition: 'width 1s linear',
+                }} />
+              </div>
             </div>
-          </div>
-        )}
+          )}
+          {/* Profile / settings button */}
+          <button onClick={() => router.push('/profile')} style={{
+            background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border)',
+            borderRadius: 10, width: 36, height: 36, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'var(--text2)', transition: 'all 0.2s',
+          }}
+            onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.1)'}
+            onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)'}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Messages */}
