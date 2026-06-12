@@ -15,10 +15,10 @@ export default function Home() {
   const [lang, setLang] = useState('fr')
   const [authMode, setAuthMode] = useState<'login' | 'register' | null>(null)
   const [user, setUser] = useState<any>(null)
+  const [checking, setChecking] = useState(true)
   const [cgvOpen, setCgvOpen] = useState(false)
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const supabase = createSupabaseBrowserClient()
-
   const router = useRouter()
 
   useEffect(() => {
@@ -26,15 +26,15 @@ export default function Home() {
     setLang(localStorage.getItem('lang') || 'fr')
     supabase.auth.getUser().then(async ({ data }: any) => {
       const u = data.user
-      setUser(u)
-      if (!u) return
-      // Redirect logged-in users straight to the app
-      const { data: config } = await supabase.from('ai_config').select('id').eq('user_id', u.id).single()
-      if (config) {
-        router.replace('/chat')
-      } else if (isTestAccount(u.email)) {
+      if (u) {
+        // User is logged in — redirect immediately, never show landing page
+        const { data: config } = await supabase.from('ai_config').select('id').eq('user_id', u.id).single()
+        if (config) { router.replace('/chat'); return }
         router.replace('/onboarding')
+        return
       }
+      setUser(null)
+      setChecking(false)
     })
   }, [])
 
@@ -62,7 +62,7 @@ export default function Home() {
 
   const fr = lang === 'fr'
 
-  if (ageVerified === null) return null
+  if (checking || ageVerified === null) return null
   if (!ageVerified) return <AgeGate lang={lang} onConfirm={() => setAgeVerified(true)} />
 
   return (
