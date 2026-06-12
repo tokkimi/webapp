@@ -76,10 +76,9 @@ export default function Onboarding() {
       const res = await supabase.from('ai_config').insert(payload)
       err = res.error
     }
-    if (err) console.error('ai_config save error:', err)
-
     if (err) {
-      setError(fr ? 'Erreur lors de la sauvegarde. Réessayez.' : 'Save failed. Please try again.')
+      console.error('ai_config save error:', err)
+      setError(`Erreur: ${err.message || err.code || JSON.stringify(err)}`)
       setSaving(false)
       return
     }
