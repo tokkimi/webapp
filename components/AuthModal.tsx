@@ -52,6 +52,22 @@ export default function AuthModal({ mode, lang, onClose, onSwitch }: AuthModalPr
     </svg>
   )
 
+  async function handleTestLogin() {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch('/api/test-login', { method: 'POST' })
+      const { access_token, refresh_token, error: err } = await res.json()
+      if (err) { setError('Erreur test: ' + err); setLoading(false); return }
+      await supabase.auth.setSession({ access_token, refresh_token })
+      onClose()
+      window.location.href = '/onboarding'
+    } catch {
+      setError('Connexion test impossible')
+      setLoading(false)
+    }
+  }
+
   return (
     <div onClick={onClose} style={{
       position: 'fixed', inset: 0, zIndex: 200,
@@ -183,7 +199,28 @@ export default function AuthModal({ mode, lang, onClose, onSwitch }: AuthModalPr
         )}
 
         {!success && (
-          <p style={{ textAlign: 'center', marginTop: 20, fontSize: 13, color: 'var(--text3)' }}>
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0' }}>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              <span style={{ fontSize: 12, color: 'var(--text3)' }}>{fr ? 'ou' : 'or'}</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+            </div>
+            <button type="button" onClick={handleTestLogin} disabled={loading} style={{
+              width: '100%', padding: '13px', marginBottom: 16,
+              background: 'rgba(236,72,153,0.08)', border: '1px solid rgba(236,72,153,0.25)',
+              borderRadius: 12, color: '#EC4899', fontFamily: 'DM Sans, sans-serif',
+              fontWeight: 500, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+              </svg>
+              {fr ? 'Accès démo instantané (sans email)' : 'Instant demo access (no email)'}
+            </button>
+          </>
+        )}
+        {!success && (
+          <p style={{ textAlign: 'center', marginTop: 4, fontSize: 13, color: 'var(--text3)' }}>
             {mode === 'register' ? (fr ? 'Déjà un compte ? ' : 'Already have an account? ') : (fr ? 'Pas encore de compte ? ' : 'No account yet? ')}
             <button onClick={() => onSwitch(mode === 'register' ? 'login' : 'register')}
               style={{ background: 'none', border: 'none', color: 'var(--accent-h)', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif', fontSize: 13, fontWeight: 500 }}>
