@@ -624,14 +624,14 @@ export default function ProfilePage() {
   const accent = accentFor(profileType)
   const initial = name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || '?'
 
-  const ALL_TABS: { id: Tab; label: string; show: boolean }[] = [
-    { id: 'profil',          label: 'Mon profil',    show: true },
-    { id: 'confidentialite', label: 'Confidentialité', show: profileType === 'ado' },
-    { id: 'notifications',   label: 'Notifications', show: true },
-    { id: 'public',          label: 'Profil public', show: profileType === 'pro' },
-    { id: 'abonnement',      label: 'Abonnement',    show: profileType === 'pro' },
-    { id: 'securite',        label: 'Sécurité',      show: true },
-  ].filter(t => t.show)
+  const ALL_TABS = ([
+    { id: 'profil' as Tab,          label: 'Mon profil',    show: true },
+    { id: 'confidentialite' as Tab, label: 'Confidentialité', show: profileType === 'ado' },
+    { id: 'notifications' as Tab,   label: 'Notifications', show: true },
+    { id: 'public' as Tab,          label: 'Profil public', show: profileType === 'pro' },
+    { id: 'abonnement' as Tab,      label: 'Abonnement',    show: profileType === 'pro' },
+    { id: 'securite' as Tab,        label: 'Sécurité',      show: true },
+  ] as { id: Tab; label: string; show: boolean }[]).filter(t => t.show)
 
   // ─── Loading ──────────────────────────────────────────────────────────────────
 

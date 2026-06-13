@@ -862,7 +862,7 @@ export default function AppointmentsPage() {
         const { data: profile } = await supabase.from('profiles').select('profile_type, role').eq('id', user.id).single()
         const ptype = (profile?.profile_type || profile?.role || 'parent') as ProfileType
         setProfileType(ptype)
-        localStorage.setItem('profileType', ptype)
+        localStorage.setItem('profileType', ptype as string)
       }
     } catch (_) {
       setProfileType('parent')

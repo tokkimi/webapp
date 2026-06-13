@@ -1,7 +1,6 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from 'anthropic'
+import Anthropic from '@anthropic-ai/sdk'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -27,7 +26,7 @@ Tes principes:
 - Longueur des réponses: 2-4 paragraphes max, concis`
 
 export async function POST(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
   const {
     data: { user },
@@ -135,9 +134,9 @@ export async function POST(request: NextRequest) {
         })
 
         // Increment message count
-        await supabase.rpc('increment_message_count', { conv_id: convId }).catch(() => {
+        try { await supabase.rpc('increment_message_count', { conv_id: convId }) } catch (_) {
           // Non-critical; ignore if RPC doesn't exist
-        })
+        }
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Stream error'
         controller.enqueue(encoder.encode(JSON.stringify({ error: message })))

@@ -637,14 +637,14 @@ export default function ChallengesPage() {
               <button
                 onClick={() => setShowForm(v => !v)}
                 style={{
-                  padding: '11px 22px', borderRadius: 16, border: 'none',
+                  padding: '11px 22px', borderRadius: 16,
                   cursor: 'pointer', fontWeight: 700, fontSize: 14,
                   background: showForm
-                    ? 'rgba(124,58,237,0.1)'
-                    : 'linear-gradient(135deg, #7C3AED, #EC4899)',
-                  color: showForm ? '#7C3AED' : '#fff',
-                  boxShadow: showForm ? 'none' : '0 4px 20px rgba(124,58,237,0.35)',
-                  border: showForm ? '1px solid rgba(124,58,237,0.3)' : 'none',
+                    ? 'rgba(20,184,166,0.1)'
+                    : 'linear-gradient(135deg, rgb(20,184,166), rgb(0,173,239))',
+                  color: showForm ? 'rgb(20,184,166)' : '#fff',
+                  boxShadow: showForm ? 'none' : '0 4px 20px rgba(20,184,166,0.35)',
+                  border: showForm ? '1px solid rgba(20,184,166,0.3)' : 'none',
                   transition: 'all 0.25s',
                   display: 'flex', alignItems: 'center', gap: 8,
                 }}

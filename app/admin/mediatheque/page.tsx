@@ -155,7 +155,7 @@ export default function AdminMediatheque() {
                 <label htmlFor="approved" style={{ fontSize:14,color:'#374151',cursor:'pointer' }}>Approuver immédiatement</label>
               </div>
             </div>
-            <div style={{ marginTop:18,display:'flex',gap:10' }}>
+            <div style={{ marginTop:18,display:'flex',gap:10 }}>
               <button onClick={saveResource} disabled={saving||!form.title}
                 style={{ background:'#1E3A5F',color:'#fff',border:'none',borderRadius:10,padding:'10px 24px',fontSize:14,fontWeight:600,cursor:'pointer',opacity:saving||!form.title?0.6:1 }}>
                 {saving ? 'Enregistrement…' : '✓ Enregistrer'}
