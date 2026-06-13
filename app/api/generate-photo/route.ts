@@ -10,14 +10,16 @@ export async function POST(req: NextRequest) {
   }
 
   const { aiConfig } = await req.json()
-  const { prompt, negative_prompt } = buildReplicatePrompt({
-    gender: aiConfig.gender,
-    hair: aiConfig.hair,
-    eyes: aiConfig.eyes,
-    build: aiConfig.build,
-    style: aiConfig.style,
-    personality: aiConfig.personality,
+  const promptStr = buildReplicatePrompt({
+    gender: aiConfig?.gender,
+    hair: aiConfig?.hair,
+    eyes: aiConfig?.eyes,
+    build: aiConfig?.build,
+    style: aiConfig?.style,
+    personality: aiConfig?.personality,
   })
+  const prompt = promptStr
+  const negative_prompt = ''
 
   const seed = getCharacterSeed({
     gender: aiConfig.gender,
