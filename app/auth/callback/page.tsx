@@ -28,7 +28,7 @@ function CallbackHandler() {
       if (!user) { router.replace('/'); return }
 
       // Check if user already has ai_config → go to chat
-      const { data: config } = await supabase.from('ai_config').select('id').eq('user_id', user.id).single()
+      const { data: config } = await supabase.from('ai_config').select('id').eq('user_id', user.id).limit(1).maybeSingle()
       if (config) { router.replace('/chat'); return }
 
       // Check if user has subscription (or is test account) → go to onboarding

@@ -28,8 +28,8 @@ export default function Home() {
       const u = data.user
       if (u) {
         // User is logged in — redirect immediately, never show landing page
-        const { data: config } = await supabase.from('ai_config').select('id').eq('user_id', u.id).single()
-        if (config) { router.replace('/chat'); return }
+        const { data: cfgRows } = await supabase.from('ai_config').select('id').eq('user_id', u.id).limit(1)
+        if (cfgRows?.[0]) { router.replace('/chat'); return }
         router.replace('/onboarding')
         return
       }

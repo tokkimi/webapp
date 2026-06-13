@@ -52,7 +52,7 @@ export default function Profile() {
       supabase.from('profiles').select('*').eq('id', user.id).single(),
       supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('status', 'active').single(),
       supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
-      supabase.from('ai_config').select('*').eq('user_id', user.id).single(),
+      supabase.from('ai_config').select('*').eq('user_id', user.id).order('updated_at', { ascending: false }).limit(1).maybeSingle(),
     ])
     const sub = isTestAccount(user.email) ? TEST_SUBSCRIPTION : subFromDb
     setProfile(prof)
@@ -76,7 +76,7 @@ export default function Profile() {
     if (!user || !gender || !personality) return
     setSavingAi(true)
     const payload = { user_id: user.id, gender, personality, hair, eyes, build, style, updated_at: new Date().toISOString() }
-    const { data: existing } = await supabase.from('ai_config').select('id').eq('user_id', user.id).single()
+    const { data: existing } = await supabase.from('ai_config').select('id').eq('user_id', user.id).limit(1).maybeSingle()
     if (existing) {
       await supabase.from('ai_config').update(payload).eq('user_id', user.id)
     } else {

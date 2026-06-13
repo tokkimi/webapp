@@ -32,8 +32,8 @@ export default function Onboarding() {
       if (!user) { router.replace('/'); return }
 
       // Check if config already exists → go straight to chat
-      const { data: existing } = await supabase.from('ai_config').select('id').eq('user_id', user.id).single()
-      if (existing) { router.replace('/chat'); return }
+      const { data: existingRows } = await supabase.from('ai_config').select('id').eq('user_id', user.id).limit(1)
+      if (existingRows?.[0]) { router.replace('/chat'); return }
 
       let sub: any = null
       if (isTestAccount(user.email)) {

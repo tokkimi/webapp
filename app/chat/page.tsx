@@ -67,8 +67,9 @@ export default function Chat() {
       if (!sub) { setInitError(`SUB: pas d'abonnement actif pour ${user.email}`); return }
       setSubscription(sub)
 
-      const { data: config, error: cfgErr } = await supabase.from('ai_config').select('*').eq('user_id', user.id).single()
-      if (!config) { setInitError(`CFG: ai_config introuvable${cfgErr ? ` — ${cfgErr.message}` : ''}`); return }
+      const { data: cfgRows } = await supabase.from('ai_config').select('*').eq('user_id', user.id).order('updated_at', { ascending: false }).limit(1)
+      const config = cfgRows?.[0] ?? null
+      if (!config) { setInitError('CFG: ai_config introuvable — complète la configuration'); return }
       setAiConfig(config)
 
       let conv = null
