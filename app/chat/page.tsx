@@ -53,7 +53,7 @@ export default function Chat() {
   async function init() {
     try {
       const { data: { user }, error: authErr } = await supabase.auth.getUser()
-      if (!user) { setInitError(`AUTH: not logged in (${authErr?.message ?? 'no session'})`); router.push('/'); return }
+      if (!user) { setInitError(`AUTH: pas connecté — ${authErr?.message ?? 'no session'}`); return }
       setUser(user)
 
       let sub: any = null
@@ -64,12 +64,11 @@ export default function Chat() {
         if (subErr) console.error('sub error:', subErr)
         sub = data
       }
-      if (!sub) { setInitError(`SUB: no sub for ${user.email}`); router.push('/'); return }
+      if (!sub) { setInitError(`SUB: pas d'abonnement actif pour ${user.email}`); return }
       setSubscription(sub)
 
       const { data: config, error: cfgErr } = await supabase.from('ai_config').select('*').eq('user_id', user.id).single()
-      if (cfgErr) console.error('ai_config error:', cfgErr)
-      if (!config) { setInitError(`CFG: no ai_config`); router.push('/onboarding'); return }
+      if (!config) { setInitError(`CFG: ai_config introuvable${cfgErr ? ` — ${cfgErr.message}` : ''}`); return }
       setAiConfig(config)
 
       let conv = null
@@ -213,6 +212,23 @@ export default function Chat() {
       {aiConfig?.gender === 'woman' ? '🌙' : '🌊'}
     </div>
   )
+
+  if (initError) {
+    return (
+      <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 }}>
+        <div style={{ background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.3)', borderRadius: 12, padding: '16px 20px', maxWidth: 480, width: '100%' }}>
+          <p style={{ color: '#EC4899', fontWeight: 600, marginBottom: 8 }}>Erreur d'initialisation</p>
+          <p style={{ color: '#EC4899', fontSize: 13, fontFamily: 'monospace', wordBreak: 'break-all' }}>{initError}</p>
+        </div>
+        <button onClick={() => router.push('/onboarding')} className="btn-primary" style={{ padding: '12px 24px' }}>
+          Retour à la configuration
+        </button>
+        <button onClick={() => { setInitError(''); init() }} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 13 }}>
+          Réessayer
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)' }}>
