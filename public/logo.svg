@@ -1,4 +1,46 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
-  <rect width="120" height="40" rx="8" fill="rgba(20,184,166,0.1)"/>
-  <text x="10" y="26" font-family="sans-serif" font-weight="800" font-size="14" fill="rgb(127,217,208)">Capsule Ado</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 130" width="120" height="130">
+  <defs>
+    <radialGradient id="b1" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#9EECEA"/>
+      <stop offset="100%" stop-color="#14B8A6"/>
+    </radialGradient>
+    <radialGradient id="b2" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#B0F0EE"/>
+      <stop offset="100%" stop-color="#0D9488"/>
+    </radialGradient>
+    <radialGradient id="b3" cx="35%" cy="35%" r="65%">
+      <stop offset="0%" stop-color="#A3FBF6"/>
+      <stop offset="100%" stop-color="#14B8A6"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Central large bubble -->
+  <circle cx="60" cy="52" r="28" fill="url(#b1)" opacity="0.9"/>
+  <ellipse cx="51" cy="43" rx="10" ry="7" fill="white" opacity="0.35" transform="rotate(-20 51 43)"/>
+
+  <!-- Top-left bubble -->
+  <circle cx="30" cy="30" r="14" fill="url(#b2)" opacity="0.85"/>
+  <ellipse cx="25" cy="25" rx="5" ry="3.5" fill="white" opacity="0.4" transform="rotate(-15 25 25)"/>
+
+  <!-- Top-right bubble -->
+  <circle cx="88" cy="28" r="12" fill="url(#b3)" opacity="0.85"/>
+  <ellipse cx="83" cy="23" rx="4" ry="3" fill="white" opacity="0.4" transform="rotate(-15 83 23)"/>
+
+  <!-- Bottom-left bubble -->
+  <circle cx="26" cy="72" r="10" fill="url(#b2)" opacity="0.8"/>
+  <ellipse cx="22" cy="68" rx="3.5" ry="2.5" fill="white" opacity="0.4"/>
+
+  <!-- Bottom-right bubble -->
+  <circle cx="92" cy="68" r="11" fill="url(#b1)" opacity="0.8"/>
+  <ellipse cx="87" cy="63" rx="4" ry="3" fill="white" opacity="0.35"/>
+
+  <!-- Connection lines -->
+  <line x1="43" y1="38" x2="35" y2="38" stroke="rgba(20,184,166,0.4)" stroke-width="2"/>
+  <line x1="78" y1="38" x2="79" y2="35" stroke="rgba(20,184,166,0.4)" stroke-width="2"/>
+  <line x1="42" y1="64" x2="33" y2="67" stroke="rgba(20,184,166,0.4)" stroke-width="2"/>
+  <line x1="80" y1="64" x2="84" y2="62" stroke="rgba(20,184,166,0.4)" stroke-width="2"/>
+
+  <!-- CAPSULE text -->
+  <text x="60" y="105" text-anchor="middle" font-family="Outfit, Arial, sans-serif" font-weight="800" font-size="18" letter-spacing="3" fill="#14B8A6">CAPSULE</text>
+  <text x="60" y="120" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-weight="500" font-size="7.5" letter-spacing="1.5" fill="#5EEAD4">bien-etre sante mentale</text>
 </svg>

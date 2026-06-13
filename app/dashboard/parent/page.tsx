@@ -111,7 +111,7 @@ export default function ParentDashboard() {
       <nav style={{ position:'sticky',top:0,zIndex:50,background:'rgba(10,10,10,0.92)',backdropFilter:'blur(16px)',borderBottom:'1px solid rgba(255,255,255,0.07)',padding:'0 24px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between' }}>
         <Link href="/" style={{ display:'flex',alignItems:'center',gap:10,textDecoration:'none' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="Capsule Ado" style={{ height:32,objectFit:'contain' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
+          <img src="/logo.svg" onError={e=>{(e.target as HTMLImageElement).src="/logo.png"}} alt="Capsule Ado" style={{ height:32,objectFit:'contain' }} onError={e=>{(e.target as HTMLImageElement).style.display='none'}} />
           <span style={{ fontFamily:'Outfit,sans-serif',fontWeight:800,fontSize:18,color:C.light }}>Capsule Ado</span>
         </Link>
         <div style={{ display:'flex',alignItems:'center',gap:16 }}>

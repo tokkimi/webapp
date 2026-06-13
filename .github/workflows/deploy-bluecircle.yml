@@ -1,13 +1,16 @@
-name: Deploy Blue Circle
+name: Deploy Capsule Ado
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - claude/affectionate-maxwell-10fo6z
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Vercel deployment from latest branch
+      - name: Trigger Vercel deployment from Capsule Ado branch
         run: |
-          curl -X POST "https://api.vercel.com/v1/integrations/deploy/prj_mohFw1zIwTRNT0r1EIMViL2QXLEb/51eSJ4r6tu?gitBranch=claude/dreamy-hawking-d4lnf8"
-          echo "Build declenche depuis claude/dreamy-hawking-d4lnf8 ! Verifie vercel.com/tokkimis-projects"
+          curl -X POST "https://api.vercel.com/v1/integrations/deploy/prj_mohFw1zIwTRNT0r1EIMViL2QXLEb/51eSJ4r6tu?gitBranch=claude/affectionate-maxwell-10fo6z"
+          echo "Build declenche depuis claude/affectionate-maxwell-10fo6z ! Verifie vercel.com/tokkimis-projects"
