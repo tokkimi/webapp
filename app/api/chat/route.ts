@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import Groq from 'groq-sdk'
 import { buildSystemPrompt } from '@/lib/ai'
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.ANTHROPIC_API_KEY
+  const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) {
-    return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured on server' }, { status: 500 })
+    return NextResponse.json({ error: 'GROQ_API_KEY not configured on server' }, { status: 500 })
   }
 
   const { messages, aiConfig, lang } = await req.json()
@@ -21,19 +21,21 @@ export async function POST(req: NextRequest) {
   })
 
   try {
-    const client = new Anthropic({ apiKey })
-    const response = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+    const client = new Groq({ apiKey })
+    const response = await client.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
       max_tokens: 300,
-      system: systemPrompt,
-      messages: messages.map((m: any) => ({ role: m.role, content: m.content })),
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages.map((m: any) => ({ role: m.role, content: m.content })),
+      ],
     })
 
-    const reply = (response.content[0] as any).text
+    const reply = response.choices[0]?.message?.content ?? ''
     const generatePhoto = messages.length > 0 && messages.length % 7 === 0
     return NextResponse.json({ reply, generatePhoto })
   } catch (err: any) {
-    console.error('Anthropic API error:', err?.message ?? err)
+    console.error('Groq API error:', err?.message ?? err)
     return NextResponse.json({ error: err?.message ?? 'API error' }, { status: 500 })
   }
 }

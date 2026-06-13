@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   return NextResponse.json({
+    groq_key: process.env.GROQ_API_KEY ? 'SET' : 'MISSING',
     anthropic_key: process.env.ANTHROPIC_API_KEY ? 'SET' : 'MISSING',
     supabase_url: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'SET' : 'MISSING',
     supabase_anon_key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'MISSING',
