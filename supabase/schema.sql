@@ -39,15 +39,7 @@ CREATE POLICY "Users can insert their own profile"
   ON public.profiles FOR INSERT
   WITH CHECK (auth.uid() = id);
 
-CREATE POLICY "Pros can view patient profiles"
-  ON public.profiles FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.appointments a
-      WHERE a.pro_id = auth.uid()
-        AND a.patient_id = profiles.id
-    )
-  );
+-- Note: "Pros can view patient profiles" policy is created after appointments table below
 
 -- ============================================================
 -- FAMILY LINKS
@@ -274,6 +266,17 @@ CREATE POLICY "Patients can update their appointments"
 CREATE POLICY "Pros can update appointment status"
   ON public.appointments FOR UPDATE
   USING (auth.uid() = pro_id);
+
+-- Requires appointments table — added here after it exists
+CREATE POLICY "Pros can view patient profiles"
+  ON public.profiles FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.appointments a
+      WHERE a.pro_id = auth.uid()
+        AND a.patient_id = profiles.id
+    )
+  );
 
 -- ============================================================
 -- SESSION NOTES
