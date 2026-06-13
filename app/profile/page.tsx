@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation'
 import BottomNav from '@/components/BottomNav'
 import { isTestAccount, TEST_SUBSCRIPTION } from '@/lib/test-accounts'
 
-const HAIR  = ['Brun', 'Blond', 'Roux', 'Noir', 'Châtain']
+const HAIR  = ['Brun', 'Blond', 'Roux', 'Noir', 'Châtain', 'Platine']
 const EYES  = ['Marron', 'Bleu', 'Vert', 'Gris', 'Noisette']
-const BUILD = ['Mince', 'Athlétique', 'Sportif', 'Enrobé']
-const STYLE = ['Casual', 'Élégant', 'Sportif', 'Alternatif']
+const BUILD = ['Mince', 'Athlétique', 'Sportif', 'Pulpeuse', 'Enrobé']
+const STYLE = ['Casual', 'Élégant', 'Sportif', 'Lingerie', 'Latex', 'Cuir', 'Soubrette', 'Alternatif']
 
 const PLAN_NAMES:  Record<string, string> = { essentiel: 'Essentiel', illimite: 'Illimité', premium: 'Premium', elite: 'Elite' }
 const PLAN_PRICES: Record<string, string> = { essentiel: '19€/mois', illimite: '39€/mois', premium: '79€/mois', elite: '199€/mois' }
