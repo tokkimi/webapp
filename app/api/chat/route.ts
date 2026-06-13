@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   try {
     const client = new Groq({ apiKey })
     const response = await client.chat.completions.create({
-      model: 'mixtral-8x7b-32768',
+      model: 'meta-llama/llama-4-maverick-17b-128e-instruct',
       max_tokens: 300,
       messages: [
         { role: 'system', content: systemPrompt },
