@@ -93,10 +93,10 @@ function Navbar() {
         zIndex: 100,
         padding: '0.875rem 0',
         transition: 'all 0.3s ease',
-        background: scrolled ? 'rgba(248, 247, 255, 0.92)' : 'transparent',
+        background: scrolled ? 'rgba(10,10,10,0.92)' : 'transparent',
         backdropFilter: scrolled ? 'blur(12px)' : 'none',
         WebkitBackdropFilter: scrolled ? 'blur(12px)' : 'none',
-        borderBottom: scrolled ? '1px solid rgba(124, 58, 237, 0.08)' : 'none',
+        borderBottom: scrolled ? '1px solid rgba(20,184,166,0.08)' : 'none',
         boxShadow: scrolled ? '0 2px 20px rgba(0,0,0,0.06)' : 'none',
       }}
     >
@@ -107,11 +107,11 @@ function Navbar() {
             width: '36px',
             height: '36px',
             borderRadius: '10px',
-            background: 'linear-gradient(135deg, #7C3AED, #EC4899)',
+            background: 'linear-gradient(135deg, rgb(48,180,167), rgb(20,184,166))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(124, 58, 237, 0.35)',
+            boxShadow: '0 4px 12px rgba(20,184,166,0.35)',
             color: '#fff',
           }}>
             <SparkleIcon size={18} />
@@ -120,7 +120,7 @@ function Navbar() {
             fontFamily: 'var(--font-outfit, Outfit, sans-serif)',
             fontWeight: 800,
             fontSize: '1.25rem',
-            background: 'linear-gradient(135deg, #7C3AED, #EC4899)',
+            background: 'linear-gradient(135deg, rgb(48,180,167), rgb(163,251,246))',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -144,7 +144,7 @@ function Navbar() {
                 fontFamily: 'var(--font-inter, Inter, sans-serif)',
                 fontWeight: 500,
                 fontSize: '0.9375rem',
-                color: '#1A1A2E',
+                color: '#f3f4f6',
                 textDecoration: 'none',
                 opacity: 0.75,
                 transition: 'opacity 0.2s ease',
@@ -165,13 +165,13 @@ function Navbar() {
               fontFamily: 'var(--font-outfit, Outfit, sans-serif)',
               fontWeight: 600,
               fontSize: '0.9375rem',
-              color: '#7C3AED',
+              color: 'rgb(127,217,208)',
               textDecoration: 'none',
               padding: '0.5rem 1rem',
               borderRadius: '9999px',
               transition: 'background 0.2s ease',
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(124,58,237,0.08)')}
+            onMouseEnter={e => (e.currentTarget.style.background = 'rgba(20,184,166,0.08)')}
             onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           >
             Se connecter
@@ -186,17 +186,17 @@ function Navbar() {
               textDecoration: 'none',
               padding: '0.625rem 1.375rem',
               borderRadius: '9999px',
-              background: 'linear-gradient(135deg, #7C3AED, #EC4899)',
-              boxShadow: '0 4px 16px rgba(124, 58, 237, 0.35)',
+              background: 'linear-gradient(135deg, rgb(20,184,166), rgb(0,173,239))',
+              boxShadow: '0 4px 16px rgba(20,184,166,0.35)',
               transition: 'all 0.2s ease',
               display: 'inline-block',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.boxShadow = '0 6px 24px rgba(124, 58, 237, 0.5)'
+              e.currentTarget.style.boxShadow = '0 6px 24px rgba(20,184,166,0.5)'
               e.currentTarget.style.transform = 'translateY(-1px)'
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(124, 58, 237, 0.35)'
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(20,184,166,0.35)'
               e.currentTarget.style.transform = 'translateY(0)'
             }}
           >
@@ -208,7 +208,7 @@ function Navbar() {
         <button
           className="md:hidden"
           onClick={() => setMenuOpen(!menuOpen)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', color: '#1A1A2E' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', color: '#f3f4f6' }}
           aria-label="Menu"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -224,9 +224,9 @@ function Navbar() {
       {/* Mobile Menu */}
       {menuOpen && (
         <div style={{
-          background: 'rgba(248, 247, 255, 0.98)',
+          background: 'rgba(10,10,10,0.98)',
           backdropFilter: 'blur(12px)',
-          borderTop: '1px solid rgba(124, 58, 237, 0.08)',
+          borderTop: '1px solid rgba(20,184,166,0.08)',
           padding: '1rem 1.5rem 1.5rem',
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -237,13 +237,13 @@ function Navbar() {
               { label: 'Tarifs', href: '#tarifs' },
             ].map((link) => (
               <a key={link.label} href={link.href} onClick={() => setMenuOpen(false)}
-                style={{ fontWeight: 500, color: '#1A1A2E', textDecoration: 'none', fontSize: '1rem' }}>
+                style={{ fontWeight: 500, color: '#f3f4f6', textDecoration: 'none', fontSize: '1rem' }}>
                 {link.label}
               </a>
             ))}
             <Link href="/auth" style={{
               display: 'flex', justifyContent: 'center', padding: '0.75rem',
-              background: 'linear-gradient(135deg, #7C3AED, #EC4899)', color: '#fff',
+              background: 'linear-gradient(135deg, rgb(20,184,166), rgb(0,173,239))', color: '#fff',
               borderRadius: '9999px', fontWeight: 700, textDecoration: 'none',
               fontFamily: 'var(--font-outfit, Outfit, sans-serif)',
             }}>
@@ -261,11 +261,11 @@ function Navbar() {
    ============================================================ */
 function Hero() {
   const floatingItems = [
-    { top: '18%', left: '6%', size: 20, color: '#7C3AED', delay: '0s' },
-    { top: '28%', right: '8%', size: 16, color: '#EC4899', delay: '0.5s' },
-    { top: '62%', left: '4%', size: 14, color: '#0D9488', delay: '1s' },
-    { top: '72%', right: '6%', size: 18, color: '#F97316', delay: '0.3s' },
-    { top: '45%', left: '93%', size: 12, color: '#7C3AED', delay: '0.8s' },
+    { top: '18%', left: '6%', size: 20, color: 'rgb(20,184,166)', delay: '0s' },
+    { top: '28%', right: '8%', size: 16, color: 'rgb(217,70,239)', delay: '0.5s' },
+    { top: '62%', left: '4%', size: 14, color: 'rgb(127,217,208)', delay: '1s' },
+    { top: '72%', right: '6%', size: 18, color: 'rgb(234,179,8)', delay: '0.3s' },
+    { top: '45%', left: '93%', size: 12, color: 'rgb(20,184,166)', delay: '0.8s' },
   ]
 
   return (
@@ -273,15 +273,15 @@ function Hero() {
       {/* Animated gradient background */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'linear-gradient(135deg, #F5F0FF 0%, #FFF0F8 30%, #F0F9FF 60%, #FFF7ED 100%)',
+        background: 'linear-gradient(135deg, #0a0a0a 0%, #0d1a1a 30%, #0a0a0a 60%, #0d0a00 100%)',
         backgroundSize: '400% 400%',
         animation: 'gradientShift 8s ease infinite',
       }} />
 
       {/* Decorative blobs */}
-      <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-      <div style={{ position: 'absolute', bottom: 0, right: '-5%', width: '450px', height: '450px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(236,72,153,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
-      <div style={{ position: 'absolute', top: '40%', left: '40%', width: '350px', height: '350px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(13,148,136,0.08) 0%, transparent 70%)', filter: 'blur(60px)' }} />
+      <div style={{ position: 'absolute', top: '-10%', left: '-5%', width: '500px', height: '500px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(20,184,166,0.15) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+      <div style={{ position: 'absolute', bottom: 0, right: '-5%', width: '450px', height: '450px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(217,70,239,0.12) 0%, transparent 70%)', filter: 'blur(40px)' }} />
+      <div style={{ position: 'absolute', top: '40%', left: '40%', width: '350px', height: '350px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(234,179,8,0.08) 0%, transparent 70%)', filter: 'blur(60px)' }} />
 
       {/* Floating sparkles */}
       {floatingItems.map((s, i) => (
@@ -301,9 +301,9 @@ function Hero() {
         {/* Badge */}
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-          background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)',
+          background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)',
           borderRadius: '9999px', padding: '0.375rem 1rem', marginBottom: '2rem',
-          color: '#7C3AED', animation: 'fadeUp 0.6s ease forwards',
+          color: 'rgb(127,217,208)', animation: 'fadeUp 0.6s ease forwards',
         }}>
           <SparkleIcon size={14} />
           <span style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 600, fontSize: '0.8125rem', letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>
@@ -315,26 +315,26 @@ function Hero() {
         <h1 style={{
           fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 900,
           fontSize: 'clamp(2.25rem, 6vw, 4.5rem)', lineHeight: 1.1, letterSpacing: '-0.03em',
-          color: '#1A1A2E', marginBottom: '1.5rem',
+          color: '#f3f4f6', marginBottom: '1.5rem',
           animation: 'fadeUp 0.6s ease 0.1s both',
         }}>
           La plateforme qui{' '}
-          <span style={{ background: 'linear-gradient(135deg, #7C3AED, #EC4899)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          <span style={{ background: 'linear-gradient(135deg, rgb(20,184,166), rgb(163,251,246))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             accompagne les ados
           </span>
           ,{' '}
-          <span style={{ background: 'linear-gradient(135deg, #0D9488, #2563EB)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          <span style={{ background: 'linear-gradient(135deg, rgb(217,70,239), rgb(240,171,252))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             soutient les familles
           </span>{' '}
           &amp; connecte les{' '}
-          <span style={{ background: 'linear-gradient(135deg, #1E3A5F, #64748B)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+          <span style={{ background: 'linear-gradient(135deg, rgb(250,204,21), rgb(253,224,71))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
             pros
           </span>
         </h1>
 
         {/* Subtitle */}
         <p style={{
-          fontSize: 'clamp(1.05rem, 2vw, 1.25rem)', color: '#4B5563', lineHeight: 1.7,
+          fontSize: 'clamp(1.05rem, 2vw, 1.25rem)', color: '#9ca3af', lineHeight: 1.7,
           maxWidth: '680px', margin: '0 auto 3rem',
           animation: 'fadeUp 0.6s ease 0.2s both',
         }}>
@@ -347,16 +347,16 @@ function Hero() {
           animation: 'fadeUp 0.6s ease 0.3s both',
         }}>
           {[
-            { label: 'Je suis un Ado', emoji: '✨', desc: '13–25 ans', gradient: 'linear-gradient(135deg, #7C3AED, #EC4899)', shadow: 'rgba(124,58,237,0.3)', href: '/auth?type=ado' },
-            { label: 'Je suis un Parent', emoji: '🤝', desc: 'Accompagner mon enfant', gradient: 'linear-gradient(135deg, #0D9488, #2563EB)', shadow: 'rgba(13,148,136,0.3)', href: '/auth?type=parent' },
-            { label: 'Je suis un Pro', emoji: '🎓', desc: 'Psychologue, thérapeute…', gradient: 'linear-gradient(135deg, #1E3A5F, #64748B)', shadow: 'rgba(30,58,95,0.3)', href: '/auth?type=pro' },
+            { label: 'Je suis un Ado', emoji: '✨', desc: '13–25 ans', gradient: 'linear-gradient(135deg, rgb(20,184,166), rgb(0,173,239))', shadow: 'rgba(20,184,166,0.3)', href: '/auth?type=ado' },
+            { label: 'Je suis un Parent', emoji: '🤝', desc: 'Accompagner mon enfant', gradient: 'linear-gradient(135deg, rgb(217,70,239), rgb(162,28,175))', shadow: 'rgba(217,70,239,0.3)', href: '/auth?type=parent' },
+            { label: 'Je suis un Pro', emoji: '🎓', desc: 'Psychologue, thérapeute…', gradient: 'linear-gradient(135deg, rgb(250,204,21), rgb(161,98,7))', shadow: 'rgba(234,179,8,0.3)', href: '/auth?type=pro' },
           ].map((card) => (
             <Link key={card.label} href={card.href} style={{
               display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem 1.5rem',
-              background: '#fff', borderRadius: '1rem',
+              background: '#111111', borderRadius: '1rem',
               border: '1px solid rgba(0,0,0,0.06)',
               boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
-              textDecoration: 'none', color: '#1A1A2E',
+              textDecoration: 'none', color: '#f3f4f6',
               transition: 'all 0.25s ease', minWidth: '220px',
             }}
               onMouseEnter={e => {
@@ -376,8 +376,8 @@ function Hero() {
                 {card.emoji}
               </div>
               <div style={{ textAlign: 'left', flex: 1 }}>
-                <div style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 700, fontSize: '0.9375rem', color: '#1A1A2E' }}>{card.label}</div>
-                <div style={{ fontSize: '0.8125rem', color: '#6B7280', marginTop: '0.125rem' }}>{card.desc}</div>
+                <div style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 700, fontSize: '0.9375rem', color: '#f3f4f6' }}>{card.label}</div>
+                <div style={{ fontSize: '0.8125rem', color: '#6b7280', marginTop: '0.125rem' }}>{card.desc}</div>
               </div>
               <div style={{ color: '#9CA3AF' }}><ArrowRightIcon /></div>
             </Link>
@@ -391,8 +391,8 @@ function Hero() {
         }}>
           {['RGPD conforme', 'Données chiffrées', 'Gratuit pour les ados'].map((item) => (
             <div key={item} style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-              <div style={{ color: '#7C3AED' }}><CheckIcon /></div>
-              <span style={{ fontSize: '0.875rem', color: '#4B5563', fontWeight: 500 }}>{item}</span>
+              <div style={{ color: 'rgb(20,184,166)' }}><CheckIcon /></div>
+              <span style={{ fontSize: '0.875rem', color: '#9ca3af', fontWeight: 500 }}>{item}</span>
             </div>
           ))}
         </div>
@@ -411,8 +411,8 @@ function PourQui() {
       label: 'Ados',
       emoji: '✨',
       tagline: 'Ton espace, tes mots',
-      gradient: 'linear-gradient(135deg, #7C3AED 0%, #EC4899 60%, #F97316 100%)',
-      shadow: 'rgba(124,58,237,0.25)',
+      gradient: 'linear-gradient(135deg, rgb(20,184,166) 0%, rgb(0,173,239) 100%)',
+      shadow: 'rgba(20,184,166,0.25)',
       features: [
         'Journal intime avec IA bienveillante',
         'Suivi de ton humeur au quotidien',
@@ -429,8 +429,8 @@ function PourQui() {
       label: 'Parents',
       emoji: '🤝',
       tagline: 'Rester proche, avec discrétion',
-      gradient: 'linear-gradient(135deg, #0D9488 0%, #2563EB 100%)',
-      shadow: 'rgba(13,148,136,0.25)',
+      gradient: 'linear-gradient(135deg, rgb(217,70,239) 0%, rgb(162,28,175) 100%)',
+      shadow: 'rgba(217,70,239,0.25)',
       features: [
         'Tableau de bord parental bienveillant',
         "Suivi d'humeur (si l'ado accepte)",
@@ -447,8 +447,8 @@ function PourQui() {
       label: 'Professionnels',
       emoji: '🎓',
       tagline: 'Développez votre pratique',
-      gradient: 'linear-gradient(135deg, #1E3A5F 0%, #64748B 100%)',
-      shadow: 'rgba(30,58,95,0.25)',
+      gradient: 'linear-gradient(135deg, rgb(250,204,21) 0%, rgb(161,98,7) 100%)',
+      shadow: 'rgba(234,179,8,0.25)',
       features: [
         'Profil certifié visible par les familles',
         'Agenda de rendez-vous intégré',
@@ -463,24 +463,24 @@ function PourQui() {
   ]
 
   return (
-    <section id="pour-qui" style={{ padding: '6rem 0', background: '#fff' }}>
+    <section id="pour-qui" style={{ padding: '6rem 0', background: '#111111' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-            background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)',
+            background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)',
             borderRadius: '9999px', padding: '0.375rem 1rem', marginBottom: '1.25rem',
-            color: '#7C3AED',
+            color: 'rgb(127,217,208)',
           }}>
             <SparkleIcon size={14} />
             <span style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 600, fontSize: '0.8125rem', letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>
               Pour qui ?
             </span>
           </div>
-          <h2 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 800, fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', color: '#1A1A2E', marginBottom: '1rem' }}>
+          <h2 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 800, fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', color: '#f3f4f6', marginBottom: '1rem' }}>
             Une plateforme conçue pour chacun
           </h2>
-          <p style={{ fontSize: '1.125rem', color: '#6B7280', maxWidth: '560px', margin: '0 auto' }}>
+          <p style={{ fontSize: '1.125rem', color: '#6b7280', maxWidth: '560px', margin: '0 auto' }}>
             Trois expériences distinctes, un seul objectif : le bien-être des jeunes.
           </p>
         </div>
@@ -509,7 +509,7 @@ function PourQui() {
               </div>
 
               {/* Features */}
-              <div style={{ background: '#fff', padding: '1.75rem' }}>
+              <div style={{ background: '#111111', padding: '1.75rem' }}>
                 <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
                   {card.features.map((feature) => (
                     <li key={feature} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem' }}>
@@ -522,7 +522,7 @@ function PourQui() {
                           <path d="M20 6L9 17l-5-5" />
                         </svg>
                       </div>
-                      <span style={{ fontSize: '0.9375rem', color: '#374151', lineHeight: 1.5 }}>{feature}</span>
+                      <span style={{ fontSize: '0.9375rem', color: '#d1d5db', lineHeight: 1.5 }}>{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -559,28 +559,28 @@ function PourQui() {
    ============================================================ */
 function HowItWorks() {
   const steps = [
-    { number: '01', icon: <HeartIcon />, title: 'Crée ton profil', desc: "Ado, parent ou professionnel — choisis ton profil et configure ton espace en moins de 2 minutes.", color: '#7C3AED', bg: 'rgba(124,58,237,0.08)' },
-    { number: '02', icon: <MessageIcon />, title: 'Explore les outils', desc: "Journal, suivi d'humeur, chat IA, ressources, ou prise de rendez-vous selon tes besoins.", color: '#0D9488', bg: 'rgba(13,148,136,0.08)' },
-    { number: '03', icon: <TrendingUpIcon />, title: 'Grandis à ton rythme', desc: 'Suivi de progrès, défis bien-être, motivation quotidienne — chaque pas compte.', color: '#EC4899', bg: 'rgba(236,72,153,0.08)' },
+    { number: '01', icon: <HeartIcon />, title: 'Crée ton profil', desc: "Ado, parent ou professionnel — choisis ton profil et configure ton espace en moins de 2 minutes.", color: 'rgb(20,184,166)', bg: 'rgba(20,184,166,0.08)' },
+    { number: '02', icon: <MessageIcon />, title: 'Explore les outils', desc: "Journal, suivi d'humeur, chat IA, ressources, ou prise de rendez-vous selon tes besoins.", color: 'rgb(217,70,239)', bg: 'rgba(217,70,239,0.08)' },
+    { number: '03', icon: <TrendingUpIcon />, title: 'Grandis à ton rythme', desc: 'Suivi de progrès, défis bien-être, motivation quotidienne — chaque pas compte.', color: 'rgb(234,179,8)', bg: 'rgba(234,179,8,0.08)' },
   ]
 
   return (
-    <section style={{ padding: '6rem 0', background: '#F8F7FF' }}>
+    <section style={{ padding: '6rem 0', background: '#0a0a0a' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-            background: 'rgba(13,148,136,0.08)', border: '1px solid rgba(13,148,136,0.2)',
-            borderRadius: '9999px', padding: '0.375rem 1rem', marginBottom: '1.25rem', color: '#0D9488',
+            background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)',
+            borderRadius: '9999px', padding: '0.375rem 1rem', marginBottom: '1.25rem', color: 'rgb(127,217,208)',
           }}>
             <span style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 600, fontSize: '0.8125rem', letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>
               Comment ça marche ?
             </span>
           </div>
-          <h2 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 800, fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', color: '#1A1A2E', marginBottom: '1rem' }}>
+          <h2 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 800, fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', color: '#f3f4f6', marginBottom: '1rem' }}>
             Simple, rapide, efficace
           </h2>
-          <p style={{ fontSize: '1.125rem', color: '#6B7280', maxWidth: '500px', margin: '0 auto' }}>
+          <p style={{ fontSize: '1.125rem', color: '#6b7280', maxWidth: '500px', margin: '0 auto' }}>
             Trois étapes pour commencer votre parcours bien-être.
           </p>
         </div>
@@ -588,7 +588,7 @@ function HowItWorks() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
           {steps.map((step, i) => (
             <div key={step.number} style={{
-              background: '#fff', borderRadius: '1.25rem', padding: '2rem',
+              background: '#111111', borderRadius: '1.25rem', padding: '2rem',
               boxShadow: '0 4px 24px rgba(0,0,0,0.06)', border: '1px solid rgba(0,0,0,0.04)',
               position: 'relative', transition: 'transform 0.25s ease, box-shadow 0.25s ease',
             }}
@@ -601,8 +601,8 @@ function HowItWorks() {
               <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: step.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: step.color, marginBottom: '1.25rem' }}>
                 {step.icon}
               </div>
-              <h3 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 700, fontSize: '1.25rem', color: '#1A1A2E', marginBottom: '0.75rem' }}>{step.title}</h3>
-              <p style={{ color: '#6B7280', lineHeight: 1.7, fontSize: '0.9375rem' }}>{step.desc}</p>
+              <h3 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 700, fontSize: '1.25rem', color: '#f3f4f6', marginBottom: '0.75rem' }}>{step.title}</h3>
+              <p style={{ color: '#6b7280', lineHeight: 1.7, fontSize: '0.9375rem' }}>{step.desc}</p>
               {i < steps.length - 1 && (
                 <div className="hidden lg:block" style={{ position: 'absolute', top: '50%', right: '-1rem', transform: 'translateY(-50%)', zIndex: 2, color: '#D1D5DB' }}>
                   <ArrowRightIcon />
@@ -623,28 +623,28 @@ function MotivationSection() {
   const [liked, setLiked] = useState(false)
 
   return (
-    <section style={{ padding: '6rem 0', background: '#fff', overflow: 'hidden' }}>
+    <section style={{ padding: '6rem 0', background: '#111111', overflow: 'hidden' }}>
       <div style={{ maxWidth: '900px', margin: '0 auto', padding: '0 1.5rem', textAlign: 'center' }}>
         <div style={{
           display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-          background: 'rgba(249,115,22,0.08)', border: '1px solid rgba(249,115,22,0.2)',
+          background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)',
           borderRadius: '9999px', padding: '0.375rem 1rem', marginBottom: '1.25rem',
-          color: '#F97316',
+          color: 'rgb(127,217,208)',
         }}>
           <SparkleIcon size={14} />
           <span style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 600, fontSize: '0.8125rem', letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>
             Motivation du jour
           </span>
         </div>
-        <h2 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 800, fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', color: '#1A1A2E', marginBottom: '2.5rem' }}>
+        <h2 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 800, fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', color: '#f3f4f6', marginBottom: '2.5rem' }}>
           Une pensée inspirante chaque matin
         </h2>
 
         {/* Motivation Card */}
         <div style={{
           borderRadius: '2rem', overflow: 'hidden',
-          background: 'linear-gradient(135deg, #7C3AED 0%, #EC4899 50%, #F97316 100%)',
-          boxShadow: '0 20px 60px rgba(124,58,237,0.35)',
+          background: 'linear-gradient(135deg, rgb(20,184,166) 0%, rgb(0,173,239) 50%, rgb(127,217,208) 100%)',
+          boxShadow: '0 20px 60px rgba(20,184,166,0.35)',
           animation: 'float 5s ease-in-out infinite',
         }}>
           <div style={{ padding: '2.5rem 3rem', position: 'relative', overflow: 'hidden' }}>
@@ -697,19 +697,19 @@ function MotivationSection() {
    ============================================================ */
 function TrustSection() {
   const badges = [
-    { icon: <ShieldIcon />, title: 'RGPD conforme', desc: 'Toutes tes données sont traitées conformément au règlement européen RGPD. Ta vie privée est notre priorité.', color: '#7C3AED', bg: 'rgba(124,58,237,0.06)', border: 'rgba(124,58,237,0.15)' },
-    { icon: <LockIcon />, title: 'Données chiffrées', desc: 'Chiffrement de bout en bout. Tes journaux intimes et conversations sont lisibles uniquement par toi.', color: '#0D9488', bg: 'rgba(13,148,136,0.06)', border: 'rgba(13,148,136,0.15)' },
-    { icon: <StarIcon />, title: 'Professionnels certifiés', desc: 'Tous les pros sont vérifiés manuellement (numéro ADELI/RPPS). Tu parles à de vrais spécialistes.', color: '#1E3A5F', bg: 'rgba(30,58,95,0.06)', border: 'rgba(30,58,95,0.15)' },
+    { icon: <ShieldIcon />, title: 'RGPD conforme', desc: 'Toutes tes données sont traitées conformément au règlement européen RGPD. Ta vie privée est notre priorité.', color: 'rgb(127,217,208)', bg: 'rgba(20,184,166,0.06)', border: 'rgba(20,184,166,0.15)' },
+    { icon: <LockIcon />, title: 'Données chiffrées', desc: 'Chiffrement de bout en bout. Tes journaux intimes et conversations sont lisibles uniquement par toi.', color: 'rgb(217,70,239)', bg: 'rgba(217,70,239,0.06)', border: 'rgba(217,70,239,0.15)' },
+    { icon: <StarIcon />, title: 'Professionnels certifiés', desc: 'Tous les pros sont vérifiés manuellement (numéro ADELI/RPPS). Tu parles à de vrais spécialistes.', color: 'rgb(234,179,8)', bg: 'rgba(234,179,8,0.06)', border: 'rgba(234,179,8,0.15)' },
   ]
 
   return (
-    <section style={{ padding: '5rem 0', background: '#F8F7FF' }}>
+    <section style={{ padding: '5rem 0', background: '#0a0a0a' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1.5rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-          <h2 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 800, fontSize: 'clamp(1.5rem, 3vw, 2.25rem)', color: '#1A1A2E', marginBottom: '0.75rem' }}>
+          <h2 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 800, fontSize: 'clamp(1.5rem, 3vw, 2.25rem)', color: '#f3f4f6', marginBottom: '0.75rem' }}>
             Ta confiance, notre engagement
           </h2>
-          <p style={{ color: '#6B7280', fontSize: '1.0625rem' }}>
+          <p style={{ color: '#6b7280', fontSize: '1.0625rem' }}>
             La sécurité et la confidentialité sont au cœur de Capsule Ado.
           </p>
         </div>
@@ -724,8 +724,8 @@ function TrustSection() {
               onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
             >
               <div style={{ color: badge.color, marginBottom: '1rem' }}>{badge.icon}</div>
-              <h3 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 700, fontSize: '1.125rem', color: '#1A1A2E', marginBottom: '0.625rem' }}>{badge.title}</h3>
-              <p style={{ color: '#6B7280', fontSize: '0.9375rem', lineHeight: 1.6 }}>{badge.desc}</p>
+              <h3 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 700, fontSize: '1.125rem', color: '#f3f4f6', marginBottom: '0.625rem' }}>{badge.title}</h3>
+              <p style={{ color: '#6b7280', fontSize: '0.9375rem', lineHeight: 1.6 }}>{badge.desc}</p>
             </div>
           ))}
         </div>
@@ -741,21 +741,21 @@ function Pricing() {
   const plans = [
     {
       name: 'Gratuit', price: '0', period: 'pour toujours', desc: 'Parfait pour débuter',
-      popular: false, color: '#64748B', gradient: 'linear-gradient(135deg, #64748B, #94A3B8)',
+      popular: false, color: 'rgb(163,251,246)', gradient: 'linear-gradient(135deg, rgb(48,180,167), rgb(20,184,166))',
       features: ['Profil professionnel basique', '5 patients actifs', 'Agenda de rendez-vous', 'Notes de séance (limité)', 'Messagerie sécurisée'],
       notIncluded: ['Visioconférence intégrée', 'Facturation automatique', 'Analytics avancées'],
       cta: 'Commencer gratuitement', href: '/auth?type=pro&plan=free',
     },
     {
       name: 'Essentiel', price: '29', period: '/mois', desc: 'Le plus populaire',
-      popular: true, color: '#7C3AED', gradient: 'linear-gradient(135deg, #7C3AED, #EC4899)',
+      popular: true, color: 'rgb(127,217,208)', gradient: 'linear-gradient(135deg, rgb(20,184,166), rgb(0,173,239))',
       features: ['Profil certifié + badge', '30 patients actifs', 'Agenda illimité', 'Notes de séance illimitées', 'Visioconférence intégrée', 'Messagerie prioritaire', 'Ressources thérapeutiques', 'Analytics de base'],
       notIncluded: ['Facturation automatique'],
       cta: 'Essai gratuit 14 jours', href: '/auth?type=pro&plan=essentiel',
     },
     {
       name: 'Pro', price: '59', period: '/mois', desc: 'Pour les praticiens établis',
-      popular: false, color: '#1E3A5F', gradient: 'linear-gradient(135deg, #1E3A5F, #2D5A8F)',
+      popular: false, color: 'rgb(234,179,8)', gradient: 'linear-gradient(135deg, rgb(250,204,21), rgb(161,98,7))',
       features: ['Tout le plan Essentiel', 'Patients illimités', 'Facturation automatique', 'Analytics complètes', 'Accès API', 'Support prioritaire', 'Formation et onboarding', 'Personnalisation du profil'],
       notIncluded: [],
       cta: 'Essai gratuit 14 jours', href: '/auth?type=pro&plan=pro',
@@ -763,24 +763,24 @@ function Pricing() {
   ]
 
   return (
-    <section id="tarifs" style={{ padding: '6rem 0', background: '#fff' }}>
+    <section id="tarifs" style={{ padding: '6rem 0', background: '#111111' }}>
       <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 1.5rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '3.5rem' }}>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-            background: 'rgba(30,58,95,0.08)', border: '1px solid rgba(30,58,95,0.15)',
+            background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.15)',
             borderRadius: '9999px', padding: '0.375rem 1rem', marginBottom: '1.25rem',
-            color: '#1E3A5F',
+            color: 'rgb(253,224,71)',
           }}>
             <BriefcaseIcon />
             <span style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 600, fontSize: '0.8125rem', letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>
               Tarifs Professionnels
             </span>
           </div>
-          <h2 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 800, fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', color: '#1A1A2E', marginBottom: '1rem' }}>
+          <h2 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 800, fontSize: 'clamp(1.75rem, 4vw, 2.75rem)', color: '#f3f4f6', marginBottom: '1rem' }}>
             Des offres adaptées à votre pratique
           </h2>
-          <p style={{ fontSize: '1.0625rem', color: '#6B7280', maxWidth: '500px', margin: '0 auto' }}>
+          <p style={{ fontSize: '1.0625rem', color: '#6b7280', maxWidth: '500px', margin: '0 auto' }}>
             Ados et parents bénéficient d&apos;un accès gratuit. Les professionnels choisissent leur plan.
           </p>
         </div>
@@ -789,43 +789,43 @@ function Pricing() {
           {plans.map((plan) => (
             <div key={plan.name} style={{
               borderRadius: '1.5rem',
-              border: plan.popular ? '2px solid #7C3AED' : '2px solid #E5E7EB',
+              border: plan.popular ? '2px solid rgb(20,184,166)' : '2px solid #E5E7EB',
               background: plan.popular ? 'linear-gradient(180deg, #FAF5FF 0%, #fff 100%)' : '#fff',
               padding: plan.popular ? '2.25rem 2rem' : '2rem',
               position: 'relative',
-              boxShadow: plan.popular ? '0 16px 48px rgba(124,58,237,0.2)' : '0 4px 20px rgba(0,0,0,0.05)',
+              boxShadow: plan.popular ? '0 16px 48px rgba(20,184,166,0.2)' : '0 4px 20px rgba(0,0,0,0.05)',
               transform: plan.popular ? 'scale(1.03)' : 'scale(1)',
               transition: 'transform 0.25s ease, box-shadow 0.25s ease',
             }}
               onMouseEnter={e => {
                 e.currentTarget.style.transform = plan.popular ? 'scale(1.05)' : 'scale(1.02)'
-                e.currentTarget.style.boxShadow = plan.popular ? '0 24px 60px rgba(124,58,237,0.3)' : '0 12px 36px rgba(0,0,0,0.1)'
+                e.currentTarget.style.boxShadow = plan.popular ? '0 24px 60px rgba(20,184,166,0.3)' : '0 12px 36px rgba(0,0,0,0.1)'
               }}
               onMouseLeave={e => {
                 e.currentTarget.style.transform = plan.popular ? 'scale(1.03)' : 'scale(1)'
-                e.currentTarget.style.boxShadow = plan.popular ? '0 16px 48px rgba(124,58,237,0.2)' : '0 4px 20px rgba(0,0,0,0.05)'
+                e.currentTarget.style.boxShadow = plan.popular ? '0 16px 48px rgba(20,184,166,0.2)' : '0 4px 20px rgba(0,0,0,0.05)'
               }}
             >
               {plan.popular && (
                 <div style={{
                   position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)',
-                  background: 'linear-gradient(135deg, #7C3AED, #EC4899)', color: '#fff',
+                  background: 'linear-gradient(135deg, rgb(20,184,166), rgb(0,173,239))', color: '#fff',
                   fontSize: '0.75rem', fontWeight: 700, fontFamily: 'var(--font-outfit, Outfit, sans-serif)',
                   padding: '0.3rem 1rem', borderRadius: '9999px', whiteSpace: 'nowrap',
-                  boxShadow: '0 4px 12px rgba(124,58,237,0.4)',
+                  boxShadow: '0 4px 12px rgba(20,184,166,0.4)',
                 }}>
                   ⭐ Plus populaire
                 </div>
               )}
 
               <div style={{ marginBottom: '1.5rem' }}>
-                <div style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 800, fontSize: '1.25rem', color: '#1A1A2E', marginBottom: '0.25rem' }}>{plan.name}</div>
+                <div style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 800, fontSize: '1.25rem', color: '#f3f4f6', marginBottom: '0.25rem' }}>{plan.name}</div>
                 <div style={{ color: '#9CA3AF', fontSize: '0.875rem' }}>{plan.desc}</div>
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.25rem' }}>
-                  {plan.price !== '0' && <span style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 700, fontSize: '1.25rem', color: '#6B7280' }}>€</span>}
+                  {plan.price !== '0' && <span style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 700, fontSize: '1.25rem', color: '#6b7280' }}>€</span>}
                   <span style={{
                     fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 900,
                     fontSize: plan.price === '0' ? '2.5rem' : '3rem',
@@ -841,7 +841,7 @@ function Pricing() {
                 {plan.features.map((f) => (
                   <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem' }}>
                     <div style={{ color: plan.color, flexShrink: 0, marginTop: '1px' }}><CheckIcon /></div>
-                    <span style={{ fontSize: '0.9375rem', color: '#374151' }}>{f}</span>
+                    <span style={{ fontSize: '0.9375rem', color: '#d1d5db' }}>{f}</span>
                   </li>
                 ))}
                 {plan.notIncluded.map((f) => (
@@ -864,7 +864,7 @@ function Pricing() {
                 border: plan.popular ? 'none' : `2px solid ${plan.color}`,
                 borderRadius: '9999px', textDecoration: 'none',
                 fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 700, fontSize: '0.9375rem',
-                boxShadow: plan.popular ? '0 4px 20px rgba(124,58,237,0.35)' : 'none',
+                boxShadow: plan.popular ? '0 4px 20px rgba(20,184,166,0.35)' : 'none',
                 transition: 'all 0.2s ease',
               }}
                 onMouseEnter={e => {
@@ -919,14 +919,14 @@ function NewsletterDons() {
 
         {/* Newsletter */}
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: '999px', padding: '5px 14px', marginBottom: '1.25rem' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(20,184,166,0.08)', border: '1px solid rgba(20,184,166,0.2)', borderRadius: '999px', padding: '5px 14px', marginBottom: '1.25rem' }}>
             <span>📬</span>
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#7C3AED', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Newsletter</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgb(127,217,208)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Newsletter</span>
           </div>
-          <h2 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontSize: 'clamp(22px,3vw,32px)', fontWeight: 800, color: '#1A1A2E', margin: '0 0 0.75rem', lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontSize: 'clamp(22px,3vw,32px)', fontWeight: 800, color: '#f3f4f6', margin: '0 0 0.75rem', lineHeight: 1.2 }}>
             Restez informé·e des nouveautés
           </h2>
-          <p style={{ color: '#6B7280', fontSize: '1rem', lineHeight: 1.7, margin: '0 0 1.5rem', maxWidth: '400px' }}>
+          <p style={{ color: '#6b7280', fontSize: '1rem', lineHeight: 1.7, margin: '0 0 1.5rem', maxWidth: '400px' }}>
             Ressources, conseils, nouvelles fonctionnalités — 1 email par mois, sans spam. Désabonnement en 1 clic.
           </p>
 
@@ -939,10 +939,10 @@ function NewsletterDons() {
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Prénom"
                   style={{ flex: 1, padding: '11px 14px', border: '1.5px solid #E5E7EB', borderRadius: '12px', fontSize: '14px', fontFamily: 'Inter,sans-serif', outline: 'none' }}
-                  onFocus={e => (e.currentTarget.style.borderColor = '#7C3AED')}
+                  onFocus={e => (e.currentTarget.style.borderColor = 'rgb(20,184,166)')}
                   onBlur={e => (e.currentTarget.style.borderColor = '#E5E7EB')} />
                 <select value={profileType} onChange={e => setProfileType(e.target.value)}
-                  style={{ padding: '11px 10px', border: '1.5px solid #E5E7EB', borderRadius: '12px', fontSize: '13px', fontFamily: 'Inter,sans-serif', outline: 'none', background: '#fff' }}>
+                  style={{ padding: '11px 10px', border: '1.5px solid #E5E7EB', borderRadius: '12px', fontSize: '13px', fontFamily: 'Inter,sans-serif', outline: 'none', background: '#111111' }}>
                   <option value="ado">💜 Ado</option>
                   <option value="parent">💚 Parent</option>
                   <option value="pro">🔵 Pro</option>
@@ -951,17 +951,17 @@ function NewsletterDons() {
               <div style={{ display: 'flex', gap: '8px' }}>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="votre@email.com"
                   style={{ flex: 1, padding: '11px 14px', border: '1.5px solid #E5E7EB', borderRadius: '12px', fontSize: '14px', fontFamily: 'Inter,sans-serif', outline: 'none' }}
-                  onFocus={e => (e.currentTarget.style.borderColor = '#7C3AED')}
+                  onFocus={e => (e.currentTarget.style.borderColor = 'rgb(20,184,166)')}
                   onBlur={e => (e.currentTarget.style.borderColor = '#E5E7EB')} />
                 <button onClick={subscribe} disabled={!email || !consent || status === 'loading'}
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#EC4899)', color: '#fff', border: 'none', borderRadius: '12px', padding: '11px 18px', fontWeight: 700, fontSize: '14px', cursor: !email || !consent ? 'not-allowed' : 'pointer', opacity: !email || !consent ? 0.6 : 1, whiteSpace: 'nowrap', fontFamily: 'Inter,sans-serif' }}>
+                  style={{ background: 'linear-gradient(135deg,rgb(20,184,166),rgb(0,173,239))', color: '#fff', border: 'none', borderRadius: '12px', padding: '11px 18px', fontWeight: 700, fontSize: '14px', cursor: !email || !consent ? 'not-allowed' : 'pointer', opacity: !email || !consent ? 0.6 : 1, whiteSpace: 'nowrap', fontFamily: 'Inter,sans-serif' }}>
                   {status === 'loading' ? '…' : "S'abonner"}
                 </button>
               </div>
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer' }}>
                 <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} style={{ marginTop: '3px', flexShrink: 0 }} />
-                <span style={{ fontSize: '12px', color: '#6B7280', lineHeight: 1.5 }}>
-                  J'accepte de recevoir la newsletter de Capsule Ado. Mes données ne seront jamais partagées. <a href="/confidentialite" style={{ color: '#7C3AED' }}>Politique de confidentialité</a>
+                <span style={{ fontSize: '12px', color: '#6b7280', lineHeight: 1.5 }}>
+                  J'accepte de recevoir la newsletter de Capsule Ado. Mes données ne seront jamais partagées. <a href="/confidentialite" style={{ color: 'rgb(127,217,208)' }}>Politique de confidentialité</a>
                 </span>
               </label>
               {status === 'error' && <p style={{ color: '#EF4444', fontSize: '13px', margin: 0 }}>{msg}</p>}
@@ -970,7 +970,7 @@ function NewsletterDons() {
         </div>
 
         {/* Dons */}
-        <div style={{ background: 'linear-gradient(135deg,#7C3AED 0%,#EC4899 100%)', borderRadius: '24px', padding: '2rem', color: '#fff', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ background: 'linear-gradient(135deg,rgb(20,184,166) 0%,rgb(0,173,239) 100%)', borderRadius: '24px', padding: '2rem', color: '#fff', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: -30, right: -30, width: 150, height: 150, background: 'rgba(255,255,255,0.07)', borderRadius: '50%' }} />
           <div style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ fontSize: '40px', marginBottom: '1rem' }}>💜</div>
@@ -987,7 +987,7 @@ function NewsletterDons() {
                 </a>
               ))}
             </div>
-            <Link href="/dons" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#fff', color: '#7C3AED', borderRadius: '999px', padding: '10px 22px', fontWeight: 700, fontSize: '15px', textDecoration: 'none', fontFamily: 'var(--font-outfit, Outfit, sans-serif)' }}>
+            <Link href="/dons" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#111111', color: 'rgb(127,217,208)', borderRadius: '999px', padding: '10px 22px', fontWeight: 700, fontSize: '15px', textDecoration: 'none', fontFamily: 'var(--font-outfit, Outfit, sans-serif)' }}>
               Faire un don 💜 <ArrowRightIcon />
             </Link>
           </div>
@@ -1008,7 +1008,7 @@ function Footer() {
           {/* Brand */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1rem' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, #7C3AED, #EC4899)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'linear-gradient(135deg, rgb(48,180,167), rgb(20,184,166))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
                 <SparkleIcon size={18} />
               </div>
               <span style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 800, fontSize: '1.25rem', color: '#fff' }}>Capsule Ado</span>
@@ -1051,13 +1051,13 @@ function Footer() {
             <div style={{ fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 700, color: '#fff', marginBottom: '1rem', fontSize: '0.9375rem' }}>Commencer maintenant</div>
             <Link href="/auth" style={{
               display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-              padding: '0.75rem 1.375rem', background: 'linear-gradient(135deg, #7C3AED, #EC4899)',
+              padding: '0.75rem 1.375rem', background: 'linear-gradient(135deg, rgb(20,184,166), rgb(0,173,239))',
               color: '#fff', borderRadius: '9999px', textDecoration: 'none',
               fontFamily: 'var(--font-outfit, Outfit, sans-serif)', fontWeight: 700, fontSize: '0.9375rem',
-              boxShadow: '0 4px 16px rgba(124,58,237,0.35)', marginBottom: '1rem', transition: 'all 0.2s ease',
+              boxShadow: '0 4px 16px rgba(20,184,166,0.35)', marginBottom: '1rem', transition: 'all 0.2s ease',
             }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(124,58,237,0.5)' }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(124,58,237,0.35)' }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(20,184,166,0.5)' }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(20,184,166,0.35)' }}
             >
               S&apos;inscrire gratuitement <ArrowRightIcon />
             </Link>
@@ -1078,7 +1078,7 @@ function Footer() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: 'rgba(255,255,255,0.6)', transition: 'all 0.2s ease',
                 }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#7C3AED'; e.currentTarget.style.color = '#A78BFA'; e.currentTarget.style.background = 'rgba(124,58,237,0.15)' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgb(20,184,166)'; e.currentTarget.style.color = '#A78BFA'; e.currentTarget.style.background = 'rgba(20,184,166,0.15)' }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.color = 'rgba(255,255,255,0.6)'; e.currentTarget.style.background = 'transparent' }}
                 >
                   {s.icon}
@@ -1092,7 +1092,7 @@ function Footer() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.875rem' }}>© {new Date().getFullYear()} Capsule Ado. Tous droits réservés.</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'rgba(255,255,255,0.4)', fontSize: '0.875rem' }}>
-            <span>Fait avec</span><span style={{ color: '#EC4899' }}>♥</span><span>en France</span>
+            <span>Fait avec</span><span style={{ color: 'rgb(217,70,239)' }}>♥</span><span>en France</span>
           </div>
         </div>
       </div>
