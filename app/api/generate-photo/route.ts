@@ -31,19 +31,21 @@ export async function POST(req: NextRequest) {
         input: {
           prompt,
           negative_prompt,
-          width: 1024,
+          width: 768,
           height: 1024,
           num_outputs: 1,
-          num_inference_steps: 40,
-          guidance_scale: 7.5,
+          num_inference_steps: 35,
+          guidance_scale: 7,
           seed,
+          disable_safety_checker: true,
         },
       }
     ) as string[]
 
-    return NextResponse.json({ url: output[0] || null })
-  } catch (err) {
-    console.error('Photo generation error:', err)
-    return NextResponse.json({ url: null })
+    const url = output?.[0] || null
+    return NextResponse.json({ url })
+  } catch (err: any) {
+    console.error('Photo generation error:', err?.message ?? err)
+    return NextResponse.json({ url: null, error: err?.message })
   }
 }

@@ -67,14 +67,14 @@ export function buildReplicatePrompt(config: {
   const eyesMap: Record<string, string> = { marron: 'brown eyes', bleu: 'blue eyes', vert: 'green eyes', gris: 'grey eyes', noisette: 'hazel eyes' }
   const buildMap: Record<string, string> = { mince: 'slim', athlétique: 'athletic', sportif: 'fit toned', pulpeuse: 'curvy voluptuous', enrobé: 'full-figured' }
   const styleMap: Record<string, string> = {
-    casual: 'casual everyday outfit',
-    élégant: 'elegant evening wear',
-    sportif: 'sporty activewear',
-    lingerie: 'seductive lingerie, lace bra and panties',
-    latex: 'shiny latex bodysuit, tight latex outfit',
-    cuir: 'leather outfit, black leather corset and pants',
-    soubrette: 'maid outfit, frilly apron dress',
-    alternatif: 'alternative fashion, edgy dark style',
+    casual: 'casual everyday outfit, jeans and top',
+    élégant: 'elegant evening dress, sophisticated',
+    sportif: 'sporty activewear, tight leggings and sports bra',
+    lingerie: 'wearing seductive lingerie, lace bra, lace panties, intimate bedroom setting',
+    latex: 'wearing shiny tight latex bodysuit, latex outfit, glossy material',
+    cuir: 'wearing black leather corset, leather pants, dominatrix outfit',
+    soubrette: 'wearing french maid outfit, frilly apron, short skirt, thigh highs',
+    alternatif: 'alternative fashion, edgy dark style, fishnet stockings',
   }
   const hairDesc = hairMap[config.hair?.toLowerCase() ?? ''] ?? config.hair?.toLowerCase() ?? 'dark hair'
   const eyesDesc = eyesMap[config.eyes?.toLowerCase() ?? ''] ?? config.eyes?.toLowerCase() ?? 'brown eyes'
@@ -87,9 +87,13 @@ export function buildReplicatePrompt(config: {
     ? 'soft shy expression, gentle eyes, inviting look'
     : 'mysterious alluring expression, soft smile, sensual gaze'
 
-  const prompt = `ultra realistic portrait photograph, attractive ${genderWord}, ${hairDesc} hair, ${eyesDesc} eyes, ${buildDesc} physique, ${styleDesc} fashion, ${pose}, intimate boudoir lighting, photorealistic skin texture, sharp focus, 85mm lens, professional photography, 8k resolution, sensual atmosphere`
+  const isExplicit = ['lingerie', 'latex', 'cuir', 'soubrette'].includes(config.style?.toLowerCase() ?? '')
 
-  const negative_prompt = `cartoon, anime, illustration, painting, drawing, 3d render, cgi, deformed, ugly, bad anatomy, bad proportions, extra limbs, blurry, low quality, watermark, signature, text, logo, oversaturated`
+  const prompt = isExplicit
+    ? `RAW photo, ultra realistic, attractive ${genderWord}, ${hairDesc} hair, ${eyesDesc} eyes, ${buildDesc} physique, ${styleDesc}, ${pose}, boudoir photography, soft bedroom lighting, photorealistic skin texture, sharp focus, 85mm portrait lens, professional photography, 8k, nsfw, adult content`
+    : `ultra realistic portrait photograph, attractive ${genderWord}, ${hairDesc} hair, ${eyesDesc} eyes, ${buildDesc} physique, ${styleDesc}, ${pose}, intimate boudoir lighting, photorealistic skin texture, sharp focus, 85mm lens, professional photography, 8k resolution, sensual atmosphere`
+
+  const negative_prompt = `cartoon, anime, illustration, painting, drawing, 3d render, cgi, deformed, ugly, bad anatomy, bad proportions, extra limbs, blurry, low quality, watermark, signature, text, logo, oversaturated, child, minor, underage`
 
   return { prompt, negative_prompt }
 }
