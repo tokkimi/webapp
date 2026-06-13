@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     })
 
     const reply = response.choices[0]?.message?.content ?? ''
-    const generatePhoto = messages.length > 0 && messages.length % 7 === 0
+    const generatePhoto = messages.length > 0 && messages.length % 5 === 0
     return NextResponse.json({ reply, generatePhoto })
   } catch (err: any) {
     const msg = err?.message ?? ''

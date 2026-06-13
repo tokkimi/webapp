@@ -144,7 +144,7 @@ export default function Chat() {
       setMessages(prev => [...prev, aiMsg])
       await supabase.from('messages').insert({ conversation_id: conversationId, role: 'assistant', content: reply, type: 'text' })
 
-      if (generatePhoto && (subscription?.plan_id === 'premium' || subscription?.plan_id === 'elite')) {
+      if (generatePhoto && subscription?.plan_id && subscription.plan_id !== 'essentiel') {
         const placeholder: Message = { role: 'assistant', content: '', type: 'image' }
         setMessages(prev => [...prev, placeholder])
         const photoRes = await fetch('/api/generate-photo', {
