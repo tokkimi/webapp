@@ -25,7 +25,6 @@ export default function Chat() {
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [secondsUsed, setSecondsUsed] = useState(0)
   const [lang, setLang] = useState('fr')
-  const [initError, setInitError] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -52,74 +51,58 @@ export default function Chat() {
 
   async function init() {
     try {
-      const { data: { user }, error: authErr } = await supabase.auth.getUser()
-      if (!user) { setInitError(`AUTH: pas connecté — ${authErr?.message ?? 'no session'}`); return }
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/'); return }
       setUser(user)
 
       let sub: any = null
       if (isTestAccount(user.email)) {
         sub = TEST_SUBSCRIPTION
       } else {
-        const { data, error: subErr } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('status', 'active').single()
-        if (subErr) console.error('sub error:', subErr)
+        const { data } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('status', 'active').single()
         sub = data
       }
-      if (!sub) { setInitError(`SUB: pas d'abonnement actif pour ${user.email}`); return }
+      if (!sub) { router.push('/'); return }
       setSubscription(sub)
 
       const { data: cfgRows } = await supabase.from('ai_config').select('*').eq('user_id', user.id).order('updated_at', { ascending: false }).limit(1)
       const config = cfgRows?.[0] ?? null
-      if (!config) { setInitError('CFG: ai_config introuvable — complète la configuration'); return }
+      if (!config) { router.push('/onboarding'); return }
       setAiConfig(config)
 
       let conv = null
       if (sub.plan_id !== 'premium' && sub.plan_id !== 'elite') {
         const { data: existingConv } = await supabase
-          .from('conversations')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('started_at', { ascending: false })
-          .limit(1)
-          .single()
+          .from('conversations').select('*').eq('user_id', user.id)
+          .order('started_at', { ascending: false }).limit(1).maybeSingle()
         conv = existingConv
       }
 
       if (!conv) {
-        const { data: newConv, error: convErr } = await supabase.from('conversations').insert({
+        const { data: newConv } = await supabase.from('conversations').insert({
           user_id: user.id,
           ai_config_id: config.id,
           started_at: new Date().toISOString(),
         }).select().single()
-        if (convErr) {
-          console.error('conversation create error:', convErr)
-          setInitError(`Conv error: ${convErr.message || convErr.code}`)
-        }
         conv = newConv
       }
 
       if (conv) {
         setConversationId(conv.id)
         const { data: msgs } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('conversation_id', conv.id)
+          .from('messages').select('*').eq('conversation_id', conv.id)
           .order('created_at', { ascending: true })
         setMessages(msgs || [])
       }
 
       if (sub.plan_id === 'essentiel' || sub.plan_id === 'premium') {
         const today = new Date().toISOString().split('T')[0]
-        const { data: usage } = await supabase
-          .from('daily_usage')
-          .select('seconds_used')
-          .eq('user_id', user.id)
-          .eq('date', today)
-          .single()
+        const { data: usage } = await supabase.from('daily_usage').select('seconds_used').eq('user_id', user.id).eq('date', today).single()
         setSecondsUsed(usage?.seconds_used || 0)
         timerRef.current = setInterval(() => setSecondsUsed(s => s + 1), 1000)
       }
     } catch (e: any) {
-      setInitError(`CRASH: ${e?.message ?? String(e)}`)
+      console.error('chat init error:', e)
     }
   }
 
@@ -178,11 +161,11 @@ export default function Chat() {
         }
       }
     } catch (e: any) {
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `[DEBUG] ${e?.message || String(e)}`,
-        type: 'text',
-      }])
+      const msg = e?.message || ''
+      const friendly = msg.includes('credit balance')
+        ? (fr ? 'Service temporairement indisponible. Réessaie dans quelques instants.' : 'Service temporarily unavailable. Please try again shortly.')
+        : (fr ? 'Une erreur est survenue. Réessaie.' : 'An error occurred. Please try again.')
+      setMessages(prev => [...prev, { role: 'assistant', content: friendly, type: 'text' }])
     }
 
     setLoading(false)
@@ -213,23 +196,6 @@ export default function Chat() {
       {aiConfig?.gender === 'woman' ? '🌙' : '🌊'}
     </div>
   )
-
-  if (initError) {
-    return (
-      <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 }}>
-        <div style={{ background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.3)', borderRadius: 12, padding: '16px 20px', maxWidth: 480, width: '100%' }}>
-          <p style={{ color: '#EC4899', fontWeight: 600, marginBottom: 8 }}>Erreur d'initialisation</p>
-          <p style={{ color: '#EC4899', fontSize: 13, fontFamily: 'monospace', wordBreak: 'break-all' }}>{initError}</p>
-        </div>
-        <button onClick={() => router.push('/onboarding')} className="btn-primary" style={{ padding: '12px 24px' }}>
-          Retour à la configuration
-        </button>
-        <button onClick={() => { setInitError(''); init() }} style={{ background: 'none', border: 'none', color: 'var(--text2)', cursor: 'pointer', fontSize: 13 }}>
-          Réessayer
-        </button>
-      </div>
-    )
-  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: 'var(--bg)' }}>
@@ -310,9 +276,6 @@ export default function Chat() {
             <p style={{ color: 'var(--text3)', fontSize: 14, marginTop: 16 }}>
               {fr ? `Dites bonjour à ${aiName} pour commencer...` : `Say hello to ${aiName} to get started...`}
             </p>
-            {initError && (
-              <p style={{ color: '#EC4899', fontSize: 12, marginTop: 8 }}>[INIT] {initError}</p>
-            )}
           </div>
         )}
 
