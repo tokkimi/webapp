@@ -51,69 +51,75 @@ export default function Chat() {
   }, [input])
 
   async function init() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { router.push('/'); return }
-    setUser(user)
+    try {
+      const { data: { user }, error: authErr } = await supabase.auth.getUser()
+      if (!user) { setInitError(`AUTH: not logged in (${authErr?.message ?? 'no session'})`); router.push('/'); return }
+      setUser(user)
 
-    let sub: any = null
-    if (isTestAccount(user.email)) {
-      sub = TEST_SUBSCRIPTION
-    } else {
-      const { data } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('status', 'active').single()
-      sub = data
-    }
-    if (!sub) { router.push('/'); return }
-    setSubscription(sub)
-
-    const { data: config } = await supabase.from('ai_config').select('*').eq('user_id', user.id).single()
-    if (!config) { router.push('/onboarding'); return }
-    setAiConfig(config)
-
-    let conv = null
-    if (sub.plan_id !== 'premium' && sub.plan_id !== 'elite') {
-      const { data: existingConv } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('started_at', { ascending: false })
-        .limit(1)
-        .single()
-      conv = existingConv
-    }
-
-    if (!conv) {
-      const { data: newConv, error: convErr } = await supabase.from('conversations').insert({
-        user_id: user.id,
-        ai_config_id: config.id,
-        started_at: new Date().toISOString(),
-      }).select().single()
-      if (convErr) {
-        console.error('conversation create error:', convErr)
-        setInitError(`Conv error: ${convErr.message || convErr.code}`)
+      let sub: any = null
+      if (isTestAccount(user.email)) {
+        sub = TEST_SUBSCRIPTION
+      } else {
+        const { data, error: subErr } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).eq('status', 'active').single()
+        if (subErr) console.error('sub error:', subErr)
+        sub = data
       }
-      conv = newConv
-    }
+      if (!sub) { setInitError(`SUB: no sub for ${user.email}`); router.push('/'); return }
+      setSubscription(sub)
 
-    if (conv) {
-      setConversationId(conv.id)
-      const { data: msgs } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conv.id)
-        .order('created_at', { ascending: true })
-      setMessages(msgs || [])
-    }
+      const { data: config, error: cfgErr } = await supabase.from('ai_config').select('*').eq('user_id', user.id).single()
+      if (cfgErr) console.error('ai_config error:', cfgErr)
+      if (!config) { setInitError(`CFG: no ai_config`); router.push('/onboarding'); return }
+      setAiConfig(config)
 
-    if (sub.plan_id === 'essentiel' || sub.plan_id === 'premium') {
-      const today = new Date().toISOString().split('T')[0]
-      const { data: usage } = await supabase
-        .from('daily_usage')
-        .select('seconds_used')
-        .eq('user_id', user.id)
-        .eq('date', today)
-        .single()
-      setSecondsUsed(usage?.seconds_used || 0)
-      timerRef.current = setInterval(() => setSecondsUsed(s => s + 1), 1000)
+      let conv = null
+      if (sub.plan_id !== 'premium' && sub.plan_id !== 'elite') {
+        const { data: existingConv } = await supabase
+          .from('conversations')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('started_at', { ascending: false })
+          .limit(1)
+          .single()
+        conv = existingConv
+      }
+
+      if (!conv) {
+        const { data: newConv, error: convErr } = await supabase.from('conversations').insert({
+          user_id: user.id,
+          ai_config_id: config.id,
+          started_at: new Date().toISOString(),
+        }).select().single()
+        if (convErr) {
+          console.error('conversation create error:', convErr)
+          setInitError(`Conv error: ${convErr.message || convErr.code}`)
+        }
+        conv = newConv
+      }
+
+      if (conv) {
+        setConversationId(conv.id)
+        const { data: msgs } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', conv.id)
+          .order('created_at', { ascending: true })
+        setMessages(msgs || [])
+      }
+
+      if (sub.plan_id === 'essentiel' || sub.plan_id === 'premium') {
+        const today = new Date().toISOString().split('T')[0]
+        const { data: usage } = await supabase
+          .from('daily_usage')
+          .select('seconds_used')
+          .eq('user_id', user.id)
+          .eq('date', today)
+          .single()
+        setSecondsUsed(usage?.seconds_used || 0)
+        timerRef.current = setInterval(() => setSecondsUsed(s => s + 1), 1000)
+      }
+    } catch (e: any) {
+      setInitError(`CRASH: ${e?.message ?? String(e)}`)
     }
   }
 
