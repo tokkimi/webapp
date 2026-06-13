@@ -54,39 +54,21 @@ export default function Onboarding() {
   async function handleFinish() {
     setSaving(true)
     setError('')
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) { router.replace('/'); return }
 
-    // Ensure profile exists (required by ai_config foreign key)
-    // Use ignoreDuplicates so existing profiles are not touched
-    const name = user.user_metadata?.name || user.email?.split('@')[0] || 'User'
-    await supabase.from('profiles').upsert(
-      { id: user.id, email: user.email, name },
-      { onConflict: 'id', ignoreDuplicates: true }
-    )
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) { router.replace('/'); return }
 
-    // Try insert first, fall back to update if record exists
-    const payload = {
-      user_id: user.id,
-      gender, personality,
-      hair:  hair  || null,
-      eyes:  eyes  || null,
-      build: build || null,
-      style: style || null,
-      updated_at: new Date().toISOString(),
-    }
-    const { data: existing2 } = await supabase.from('ai_config').select('id').eq('user_id', user.id).single()
-    let err: any
-    if (existing2) {
-      const res = await supabase.from('ai_config').update(payload).eq('user_id', user.id)
-      err = res.error
-    } else {
-      const res = await supabase.from('ai_config').insert(payload)
-      err = res.error
-    }
-    if (err) {
-      console.error('ai_config save error:', err)
-      setError(`Erreur: ${err.message || err.code || JSON.stringify(err)}`)
+    const res = await fetch('/api/save-config', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ gender, personality, hair: hair || null, eyes: eyes || null, build: build || null, style: style || null }),
+    })
+    const data = await res.json()
+    if (!res.ok || data.error) {
+      setError(`Erreur: ${data.error || 'inconnue'}`)
       setSaving(false)
       return
     }
