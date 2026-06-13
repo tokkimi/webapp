@@ -33,20 +33,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Profile error: ${profileErr.message}` }, { status: 500 })
   }
 
-  // Insert or update ai_config
-  const { data: existing } = await admin.from('ai_config').select('id').eq('user_id', user.id).single()
-  const payload = { user_id: user.id, gender, personality, hair: hair ?? null, eyes: eyes ?? null, build: build ?? null, style: style ?? null, updated_at: new Date().toISOString() }
-  const { error: configErr } = existing
-    ? await admin.from('ai_config').update(payload).eq('user_id', user.id)
-    : await admin.from('ai_config').insert(payload)
-  if (configErr) {
-    return NextResponse.json({ error: `Config error: ${configErr.message}` }, { status: 500 })
+  // Delete any duplicate ai_config rows, keep only the most recent
+  const { data: allRows } = await admin.from('ai_config').select('id').eq('user_id', user.id).order('updated_at', { ascending: false })
+  if (allRows && allRows.length > 1) {
+    const idsToDelete = allRows.slice(1).map((r: any) => r.id)
+    await admin.from('ai_config').delete().in('id', idsToDelete)
   }
 
-  // Verify save
-  const { data: verify } = await admin.from('ai_config').select('id').eq('user_id', user.id).single()
-  if (!verify) {
-    return NextResponse.json({ error: 'Config not found after save — check DB' }, { status: 500 })
+  const payload = { user_id: user.id, gender, personality, hair: hair ?? null, eyes: eyes ?? null, build: build ?? null, style: style ?? null, updated_at: new Date().toISOString() }
+
+  if (allRows && allRows.length >= 1) {
+    // Update existing row
+    const { error: configErr } = await admin.from('ai_config').update(payload).eq('id', allRows[0].id)
+    if (configErr) return NextResponse.json({ error: `Update error: ${configErr.message}` }, { status: 500 })
+  } else {
+    // Insert new row
+    const { error: configErr } = await admin.from('ai_config').insert(payload)
+    if (configErr) return NextResponse.json({ error: `Insert error: ${configErr.message}` }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })
