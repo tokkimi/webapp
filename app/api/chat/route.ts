@@ -9,6 +9,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { messages, aiConfig, lang } = await req.json()
+  const fr = lang !== 'en'
 
   const systemPrompt = buildSystemPrompt({
     gender: aiConfig.gender,
@@ -35,7 +36,9 @@ export async function POST(req: NextRequest) {
     const generatePhoto = messages.length > 0 && messages.length % 7 === 0
     return NextResponse.json({ reply, generatePhoto })
   } catch (err: any) {
-    console.error('Groq API error:', err?.message ?? err)
-    return NextResponse.json({ error: err?.message ?? 'API error' }, { status: 500 })
+    const msg = err?.message ?? ''
+    console.error('Groq API error:', msg)
+    // Return the real error so the client can show appropriate message
+    return NextResponse.json({ error: msg || 'API error' }, { status: 500 })
   }
 }

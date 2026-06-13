@@ -162,9 +162,7 @@ export default function Chat() {
       }
     } catch (e: any) {
       const msg = e?.message || ''
-      const friendly = msg.includes('credit balance')
-        ? (fr ? 'Service temporairement indisponible. Réessaie dans quelques instants.' : 'Service temporarily unavailable. Please try again shortly.')
-        : (fr ? 'Une erreur est survenue. Réessaie.' : 'An error occurred. Please try again.')
+      const friendly = fr ? `Erreur: ${msg || 'inconnue'}` : `Error: ${msg || 'unknown'}`
       setMessages(prev => [...prev, { role: 'assistant', content: friendly, type: 'text' }])
     }
 
