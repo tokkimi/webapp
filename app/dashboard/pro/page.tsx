@@ -77,7 +77,12 @@ export default function ProDashboard() {
 
   async function updateAptStatus(id:string,status:string) {
     setActionLoading(id)
-    await fetch('/api/appointments',{ method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id,status}) })
+    const { data: { session } } = await supabase.auth.getSession()
+    await fetch('/api/appointments',{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json', ...(session ? { Authorization:`Bearer ${session.access_token}` } : {})},
+      body:JSON.stringify({id,status})
+    })
     setActionLoading(null); load()
   }
 

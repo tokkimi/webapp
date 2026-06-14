@@ -310,8 +310,97 @@ create table if not exists public.resources (
 create table if not exists public.newsletter_subscribers (
   id uuid primary key default gen_random_uuid(),
   email text not null unique,
+  name text,
+  profile_type text,
+  consent_at timestamptz,
+  active boolean not null default true,
+  unsubscribed_at timestamptz,
   created_at timestamptz not null default now()
 );
+
+alter table public.newsletter_subscribers add column if not exists name text;
+alter table public.newsletter_subscribers add column if not exists profile_type text;
+alter table public.newsletter_subscribers add column if not exists consent_at timestamptz;
+alter table public.newsletter_subscribers add column if not exists active boolean default true;
+alter table public.newsletter_subscribers add column if not exists unsubscribed_at timestamptz;
+
+create table if not exists public.notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  title text not null,
+  body text,
+  type text default 'info',
+  read boolean not null default false,
+  data jsonb default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique references public.profiles(id) on delete cascade,
+  stripe_subscription_id text unique,
+  stripe_customer_id text,
+  status text not null default 'inactive',
+  plan_id text,
+  current_period_start timestamptz,
+  current_period_end timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.daily_motivations (
+  id uuid primary key default gen_random_uuid(),
+  generated_date date not null unique,
+  content text not null,
+  author_style text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.user_motivations (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  motivation_id uuid not null references public.daily_motivations(id) on delete cascade,
+  liked boolean not null,
+  created_at timestamptz not null default now(),
+  unique (user_id, motivation_id)
+);
+
+create table if not exists public.ai_config (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique references public.profiles(id) on delete cascade,
+  gender text,
+  personality text,
+  hair text,
+  eyes text,
+  build text,
+  style text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.resources add column if not exists created_by uuid references public.profiles(id) on delete set null;
+
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer set search_path = public
+as $$
+  select exists (
+    select 1 from public.profiles
+    where id = auth.uid() and profile_type in ('admin', 'superadmin')
+  );
+$$;
+
+create or replace function public.delete_own_account()
+returns void
+language plpgsql
+security definer set search_path = public, auth
+as $$
+begin
+  delete from auth.users where id = auth.uid();
+end;
+$$;
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('avatars', 'avatars', true, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
@@ -367,6 +456,11 @@ alter table public.notification_preferences enable row level security;
 alter table public.family_links enable row level security;
 alter table public.resources enable row level security;
 alter table public.newsletter_subscribers enable row level security;
+alter table public.notifications enable row level security;
+alter table public.subscriptions enable row level security;
+alter table public.daily_motivations enable row level security;
+alter table public.user_motivations enable row level security;
+alter table public.ai_config enable row level security;
 
 do $$
 declare policy_row record;
@@ -379,6 +473,7 @@ end $$;
 
 create policy profiles_own_select on public.profiles for select using (
   auth.uid() = id
+  or public.is_admin()
   or exists (
     select 1 from public.appointments a
     where (a.patient_id = auth.uid() and a.pro_id = profiles.id)
@@ -394,6 +489,7 @@ create policy profiles_own_select on public.profiles for select using (
 );
 create policy profiles_own_insert on public.profiles for insert with check (auth.uid() = id);
 create policy profiles_own_update on public.profiles for update using (auth.uid() = id) with check (auth.uid() = id);
+create policy profiles_admin_update on public.profiles for update using (public.is_admin()) with check (public.is_admin());
 create policy profiles_own_delete on public.profiles for delete using (auth.uid() = id);
 
 create policy journal_own_all on public.journal_entries for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
@@ -462,17 +558,42 @@ create policy ratings_patient_insert on public.ratings for insert with check (
 create policy family_members_all on public.family_links for all
   using (auth.uid() in (parent_id, ado_id))
   with check (auth.uid() in (parent_id, ado_id));
+create policy family_ado_claim on public.family_links for update
+  using (ado_id is null and status = 'pending')
+  with check (ado_id = auth.uid() and status = 'active');
 create policy resources_read on public.resources for select using (approved = true);
+create policy resources_pro_admin_read on public.resources for select using (
+  public.is_admin() or exists (select 1 from public.profiles p where p.id = auth.uid() and p.profile_type = 'pro')
+);
+create policy resources_pro_admin_insert on public.resources for insert with check (
+  created_by = auth.uid() and (
+    public.is_admin() or exists (select 1 from public.profiles p where p.id = auth.uid() and p.profile_type = 'pro')
+  )
+);
+create policy resources_owner_admin_update on public.resources for update using (created_by = auth.uid() or public.is_admin());
+create policy resources_owner_admin_delete on public.resources for delete using (created_by = auth.uid() or public.is_admin());
 create policy newsletter_signup on public.newsletter_subscribers for insert with check (true);
+create policy newsletter_admin_read on public.newsletter_subscribers for select using (public.is_admin());
+create policy newsletter_public_unsubscribe on public.newsletter_subscribers for update using (true) with check (true);
+create policy notifications_own_all on public.notifications for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy subscriptions_own_read on public.subscriptions for select using (user_id = auth.uid() or public.is_admin());
+create policy motivations_authenticated_read on public.daily_motivations for select to authenticated using (true);
+create policy motivations_authenticated_insert on public.daily_motivations for insert to authenticated with check (true);
+create policy user_motivations_own_all on public.user_motivations for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy ai_config_own_all on public.ai_config for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+create policy appointments_admin_read on public.appointments for select using (public.is_admin());
 
 grant select on public.public_professionals to anon, authenticated;
 grant execute on function public.book_appointment(uuid, text, text) to authenticated;
 grant execute on function public.is_conversation_member(uuid) to authenticated;
 grant execute on function public.shares_conversation(uuid) to authenticated;
+grant execute on function public.is_admin() to authenticated;
+grant execute on function public.delete_own_account() to authenticated;
 grant all on public.profiles, public.journal_entries, public.mood_entries, public.challenges,
   public.availability_slots, public.appointments, public.conversations, public.conversation_members,
   public.messages, public.ratings, public.notification_preferences, public.family_links,
-  public.resources, public.newsletter_subscribers to authenticated;
+  public.resources, public.newsletter_subscribers, public.notifications, public.subscriptions,
+  public.daily_motivations, public.user_motivations, public.ai_config to authenticated;
 grant select on public.resources to anon;
 grant insert on public.newsletter_subscribers to anon;
 
@@ -484,3 +605,7 @@ drop trigger if exists appointments_updated_at on public.appointments;
 create trigger appointments_updated_at before update on public.appointments for each row execute procedure public.set_updated_at();
 drop trigger if exists conversations_updated_at on public.conversations;
 create trigger conversations_updated_at before update on public.conversations for each row execute procedure public.set_updated_at();
+drop trigger if exists subscriptions_updated_at on public.subscriptions;
+create trigger subscriptions_updated_at before update on public.subscriptions for each row execute procedure public.set_updated_at();
+drop trigger if exists ai_config_updated_at on public.ai_config;
+create trigger ai_config_updated_at before update on public.ai_config for each row execute procedure public.set_updated_at();

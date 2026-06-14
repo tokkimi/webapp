@@ -285,14 +285,20 @@ export default function ProfilePage() {
     setAddingParent(true)
     setInviteError('')
     setInviteSuccess('')
-    const { data, error } = await supabase.from('family_links').insert({ ado_id: user?.id, invite_code: inviteCode.trim(), status: 'pending' }).select().single()
+    const { data: { session } } = await supabase.auth.getSession()
+    const response = await fetch('/api/link-family', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+      body: JSON.stringify({ action: 'claim', invite_code: inviteCode.trim() }),
+    })
+    const data = await response.json().catch(() => null)
     setAddingParent(false)
-    if (error) {
+    if (!response.ok) {
       setInviteError('Code invalide ou déjà utilisé. Vérifie avec tes parents.')
     } else {
       setInviteSuccess('Demande envoyée ! Ton parent recevra une notification.')
       setInviteCode('')
-      if (data) setFamilyLinks(prev => [...prev, data as FamilyLink])
+      await loadAll()
     }
   }
 
@@ -307,7 +313,11 @@ export default function ProfilePage() {
 
   async function handlePortal() {
     setLoadingPortal(true)
-    const res = await fetch('/api/stripe/portal', { method: 'POST' })
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/stripe/portal', {
+      method: 'POST',
+      headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
+    })
     const { url } = await res.json()
     if (url) window.location.href = url
     setLoadingPortal(false)
@@ -344,7 +354,16 @@ export default function ProfilePage() {
   async function handleDeleteAccount() {
     if (deleteConfirmText !== 'SUPPRIMER') return
     setDeletingAccount(true)
-    await fetch('/api/account/delete', { method: 'DELETE' })
+    const { data: { session } } = await supabase.auth.getSession()
+    const response = await fetch('/api/account/delete', {
+      method: 'DELETE',
+      headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
+    })
+    if (!response.ok) {
+      setDeletingAccount(false)
+      alert('Impossible de supprimer le compte pour le moment.')
+      return
+    }
     await supabase.auth.signOut()
     router.push('/')
   }

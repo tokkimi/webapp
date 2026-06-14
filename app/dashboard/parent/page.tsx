@@ -78,7 +78,12 @@ export default function ParentDashboard() {
   useEffect(()=>{ load() },[load])
 
   async function generateInviteCode() {
-    const res = await fetch('/api/link-family',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({action:'generate'}) })
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/link-family',{
+      method:'POST',
+      headers:{'Content-Type':'application/json', ...(session ? { Authorization:`Bearer ${session.access_token}` } : {})},
+      body:JSON.stringify({action:'generate'})
+    })
     const data = await res.json()
     if (data.invite_code) setInviteCode(data.invite_code)
   }

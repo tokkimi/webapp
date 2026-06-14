@@ -61,10 +61,14 @@ export default function AdoDashboard() {
   const load = useCallback(async () => {
     const { data:{ user } } = await supabase.auth.getUser()
     if (!user) { router.replace('/auth'); return }
+    const { data: { session } } = await supabase.auth.getSession()
+    const authHeaders: Record<string, string> = session
+      ? { Authorization: `Bearer ${session.access_token}` }
+      : {}
 
     const [profRes, motivRes, moodsRes, jrnRes, chalRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', user.id).single(),
-      fetch('/api/motivation'),
+      fetch('/api/motivation', { headers: authHeaders }),
       supabase.from('mood_entries').select('score,created_at').eq('user_id', user.id)
         .gte('created_at', new Date(Date.now()-7*86400000).toISOString()).order('created_at',{ascending:false}),
       supabase.from('journal_entries').select('id,content,created_at').eq('user_id', user.id)
@@ -105,14 +109,22 @@ export default function AdoDashboard() {
     setTodayMood(score); setMoodPicking(false)
     const today = new Date().toISOString().split('T')[0]
     localStorage.setItem('capsule_mood_' + today, String(score))
-    await supabase.from('mood_entries').insert({ user_id:user.id, score, emoji:MOODS[score-1].emoji })
+    await supabase.from('mood_entries').upsert(
+      { user_id:user.id, score, emoji:MOODS[score-1].emoji, date: today },
+      { onConflict: 'user_id,date' }
+    )
     setMoodHistory(p => ({...p, [today]:score}))
   }
 
   async function toggleLike() {
     if (!motivation) return
     const n = !motivLiked; setMotivLiked(n)
-    await fetch('/api/motivation',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({motivation_id:motivation.id,liked:n}) })
+    const { data: { session } } = await supabase.auth.getSession()
+    await fetch('/api/motivation',{
+      method:'POST',
+      headers:{'Content-Type':'application/json', ...(session ? { Authorization:`Bearer ${session.access_token}` } : {})},
+      body:JSON.stringify({motivation_id:motivation.id,liked:n})
+    })
   }
 
   const days7 = getLast7Days()

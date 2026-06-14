@@ -42,8 +42,7 @@ export default function AdminMediatheque() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.replace('/auth'); return }
       const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-      // Only pros and admins can access
-      if (prof?.profile_type !== 'pro') { router.replace('/'); return }
+      if (!['pro', 'admin', 'superadmin'].includes(prof?.profile_type)) { router.replace('/'); return }
       setProfile(prof)
       loadResources()
     })

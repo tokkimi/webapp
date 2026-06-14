@@ -77,7 +77,7 @@ export default function AdminDashboard() {
   }
 
   const loadAppointments = async () => {
-    const { data } = await supabase.from('appointments').select('id,status,scheduled_at,notes,pro_id,user_id').order('scheduled_at', { ascending: false }).limit(50)
+    const { data } = await supabase.from('appointments').select('id,status,scheduled_at,notes_for_pro,pro_id,patient_id').order('scheduled_at', { ascending: false }).limit(50)
     setAppts(data || [])
   }
 
@@ -246,7 +246,7 @@ export default function AdminDashboard() {
                       <td style={{ padding: '14px 18px' }}>
                         <span style={{ padding: '3px 10px', borderRadius: 100, fontSize: 11, fontWeight: 700, background: a.status === 'confirmed' ? '#e0faf5' : '#f5f5f5', color: a.status === 'confirmed' ? T : '#888' }}>{a.status}</span>
                       </td>
-                      <td style={{ padding: '14px 18px', color: '#888', fontSize: 12 }}>{a.notes || '—'}</td>
+                      <td style={{ padding: '14px 18px', color: '#888', fontSize: 12 }}>{a.notes_for_pro || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
