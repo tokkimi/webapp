@@ -156,8 +156,10 @@ export default function AdoDashboard() {
           <Link href="/mediatheque" style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Médiathèque</Link>
           <Link href="/chat" style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Chat</Link>
           <button onClick={()=>setSosOpen(true)} style={{ background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.3)',color:'rgb(252,165,165)',borderRadius:100,padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer' }}>SOS</button>
-          <Link href="/profile" style={{ width:32,height:32,borderRadius:'50%',background:C.grad,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:700,fontSize:12,textDecoration:'none' }}>
-            {(firstName[0]||'?').toUpperCase()}
+          <Link href="/profile" style={{ width:32,height:32,borderRadius:'50%',overflow:'hidden',background:C.grad,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:700,fontSize:12,textDecoration:'none',flexShrink:0 }}>
+            {profile?.avatar_url
+              ? <img src={profile.avatar_url} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }} />
+              : (firstName[0]||'?').toUpperCase()}
           </Link>
         </div>
       </nav>

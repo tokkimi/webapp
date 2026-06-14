@@ -215,7 +215,12 @@ export default function ProfilePage() {
       body.price_min = priceMin ? parseInt(priceMin) : null
       body.price_max = priceMax ? parseInt(priceMax) : null
     }
-    await fetch('/api/profile', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    const { data: { session } } = await supabase.auth.getSession()
+    await fetch('/api/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+      body: JSON.stringify(body),
+    })
     if (birthDate && !birthDateLocked) setBirthDateLocked(true)
     setSavingProfil(false)
     setSavedProfil(true)
