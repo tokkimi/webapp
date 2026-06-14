@@ -1,198 +1,409 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 
-const T = '#30B4A7'
-const DARK = '#082827'
+type Appointment = {
+  id: string
+  scheduled_at: string
+  duration_minutes: number
+  type: string
+  status: string
+  notes_for_pro?: string
+  pro_notes?: string
+}
+
+type SharedResource = {
+  id: string
+  title: string
+  url?: string
+  shared_at: string
+}
+
+type Patient = {
+  id: string
+  name: string
+  email: string
+  phone?: string
+  avatar_url?: string
+  birth_date?: string
+  appointments: Appointment[]
+  shared_resources: SharedResource[]
+}
+
+type Resource = {
+  id: string
+  title: string
+  description?: string
+  type?: string
+  url?: string
+}
+
+const NAV = [
+  { href: '/dashboard/pro', icon: '⌂', label: 'Tableau de bord' },
+  { href: '/patients', icon: '◉', label: 'Patients' },
+  { href: '/appointments', icon: '▦', label: 'Agenda' },
+  { href: '/admin/mediatheque', icon: '▤', label: 'Ressources' },
+  { href: '/messages', icon: '◌', label: 'Messagerie' },
+  { href: '/profile', icon: '⚙', label: 'Paramètres' },
+]
+
+const STATUS_LABELS: Record<string, string> = {
+  pending: 'En attente',
+  confirmed: 'Confirmé',
+  completed: 'Terminé',
+  cancelled: 'Annulé',
+}
+
+function ageFromBirthDate(value?: string) {
+  if (!value) return null
+  const birth = new Date(value)
+  const today = new Date()
+  let age = today.getFullYear() - birth.getFullYear()
+  if (
+    today.getMonth() < birth.getMonth() ||
+    (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())
+  ) age--
+  return age
+}
+
+function dateLabel(value: string, withTime = false) {
+  return new Date(value).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    ...(withTime ? { hour: '2-digit', minute: '2-digit' } : {}),
+  })
+}
+
+function relativeDate(value?: string) {
+  if (!value) return 'Aucune'
+  const days = Math.floor((Date.now() - new Date(value).getTime()) / 86400000)
+  if (days < 0) return `dans ${Math.abs(days)} j`
+  if (days === 0) return "aujourd'hui"
+  if (days === 1) return 'hier'
+  if (days < 7) return `il y a ${days} j`
+  return dateLabel(value)
+}
+
+function Sidebar({ patientCount }: { patientCount: number }) {
+  return (
+    <aside className="pro-sidebar">
+      <div className="brand">
+        <div className="brand-mark">C</div>
+        <div><strong>Capsule Pro</strong><span>Espace professionnel</span></div>
+      </div>
+      <nav className="side-nav">
+        {NAV.map(item => (
+          <Link key={item.href} href={item.href} className={item.href === '/patients' ? 'active' : ''}>
+            <span className="nav-icon">{item.icon}</span>{item.label}
+          </Link>
+        ))}
+      </nav>
+      <div className="plan-card">
+        <span>Plan Pro actif</span>
+        <strong>{patientCount} patient{patientCount > 1 ? 's' : ''}</strong>
+      </div>
+    </aside>
+  )
+}
 
 export default function PatientsPage() {
   const supabase = createSupabaseBrowserClient()
   const router = useRouter()
-  const [patients, setPatients] = useState<any[]>([])
-  const [resources, setResources] = useState<any[]>([])
-  const [selected, setSelected] = useState<any>(null)
-  const [selectedAppointmentId, setSelectedAppointmentId] = useState('')
+  const [patients, setPatients] = useState<Patient[]>([])
+  const [resources, setResources] = useState<Resource[]>([])
+  const [selectedId, setSelectedId] = useState('')
+  const [appointmentId, setAppointmentId] = useState('')
+  const [activeTab, setActiveTab] = useState<'history' | 'notes' | 'resources'>('history')
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all')
   const [note, setNote] = useState('')
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [showPicker, setShowPicker] = useState(false)
+  const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
 
-  async function api(body?: object) {
+  async function request(body?: object) {
     const { data: { session } } = await supabase.auth.getSession()
-    if (!session) { router.replace('/auth'); throw new Error('Session expiree') }
-    return fetch('/api/patients', {
+    if (!session) {
+      router.replace('/auth')
+      throw new Error('Session expirée')
+    }
+    const response = await fetch('/api/patients', {
       method: body ? 'POST' : 'GET',
-      headers: { Authorization: `Bearer ${session.access_token}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+      },
       body: body ? JSON.stringify(body) : undefined,
     })
+    const result = await response.json()
+    if (!response.ok) throw new Error(result.error || 'Une erreur est survenue.')
+    return result
   }
 
-  async function load() {
+  async function load(preferredPatientId?: string) {
     try {
-      const response = await api()
-      const result = await response.json()
-      if (!response.ok) throw new Error(result.error)
-      setPatients(result.patients)
-      setResources(result.resources)
-      if (result.patients[0]) selectPatient(result.patients[0])
+      const result = await request()
+      setPatients(result.patients || [])
+      setResources(result.resources || [])
+      const nextId = preferredPatientId || selectedId || result.patients?.[0]?.id || ''
+      setSelectedId(nextId)
     } catch (err: any) {
-      setError(err.message || 'Impossible de charger les clients.')
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
-  }
-
-  function selectPatient(patient: any) {
-    setSelected(patient)
-    const appointment = patient.appointments[0]
-    setSelectedAppointmentId(appointment?.id || '')
-    setNote(appointment?.pro_notes || '')
-    setError('')
-    setMessage('')
-  }
-
-  function selectAppointment(patient: any, appointmentId: string) {
-    const appointment = patient.appointments.find((item: any) => item.id === appointmentId)
-    setSelectedAppointmentId(appointmentId)
-    setNote(appointment?.pro_notes || '')
-    setError('')
-    setMessage('')
-  }
-
-  async function saveNote() {
-    if (!selected || !selectedAppointmentId) return
-    setSaving(true)
-    setError('')
-    setMessage('')
-    const response = await api({
-      action: 'note',
-      patient_id: selected.id,
-      appointment_id: selectedAppointmentId,
-      content: note,
-    })
-    setSaving(false)
-    if (!response.ok) {
-      setError((await response.json()).error)
-      return
-    }
-    setPatients(current => current.map(patient => patient.id !== selected.id ? patient : {
-      ...patient,
-      appointments: patient.appointments.map((appointment: any) =>
-        appointment.id === selectedAppointmentId ? { ...appointment, pro_notes: note } : appointment
-      ),
-    }))
-    setMessage('Note professionnelle sauvegardee.')
-  }
-
-  async function shareResource(resourceId: string) {
-    if (!selected || !resourceId) return
-    setMessage('')
-    const response = await api({ action: 'share', patient_id: selected.id, resource_id: resourceId })
-    if (!response.ok) setError((await response.json()).error)
-    else setMessage('Ressource envoyée dans la conversation du client.')
   }
 
   useEffect(() => { load() }, []) // eslint-disable-line
 
+  const selected = patients.find(patient => patient.id === selectedId) || null
+  const selectedAppointment = selected?.appointments.find(item => item.id === appointmentId)
+
+  useEffect(() => {
+    if (!selected) return
+    const current = selected.appointments.find(item => item.id === appointmentId)
+    const appointment = current || selected.appointments[0]
+    setAppointmentId(appointment?.id || '')
+    setNote(appointment?.pro_notes || '')
+  }, [selectedId, patients]) // eslint-disable-line
+
+  const visiblePatients = useMemo(() => patients.filter(patient => {
+    const future = patient.appointments.some(item =>
+      new Date(item.scheduled_at) >= new Date() && item.status !== 'cancelled'
+    )
+    const matchesSearch = `${patient.name} ${patient.email}`.toLowerCase().includes(search.toLowerCase())
+    const matchesFilter = filter === 'all' || (filter === 'active' ? future : !future)
+    return matchesSearch && matchesFilter
+  }), [patients, search, filter])
+
+  function choosePatient(patient: Patient) {
+    setSelectedId(patient.id)
+    setActiveTab('history')
+    setNotice('')
+    setError('')
+  }
+
+  function chooseAppointment(id: string) {
+    setAppointmentId(id)
+    const appointment = selected?.appointments.find(item => item.id === id)
+    setNote(appointment?.pro_notes || '')
+    setNotice('')
+  }
+
+  async function saveNote() {
+    if (!selected || !appointmentId) return
+    setSaving(true)
+    setError('')
+    try {
+      await request({ action: 'note', patient_id: selected.id, appointment_id: appointmentId, content: note })
+      setPatients(current => current.map(patient => patient.id !== selected.id ? patient : {
+        ...patient,
+        appointments: patient.appointments.map(item =>
+          item.id === appointmentId ? { ...item, pro_notes: note } : item
+        ),
+      }))
+      setNotice('Note clinique sauvegardée.')
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function shareResource(resource: Resource) {
+    if (!selected) return
+    setError('')
+    try {
+      await request({ action: 'share', patient_id: selected.id, resource_id: resource.id })
+      setShowPicker(false)
+      setNotice('Ressource envoyée dans la messagerie du patient.')
+      await load(selected.id)
+      setActiveTab('resources')
+    } catch (err: any) {
+      setError(err.message)
+    }
+  }
+
+  const age = ageFromBirthDate(selected?.birth_date)
+  const hasUpcoming = (patient: Patient) => patient.appointments.some(item =>
+    new Date(item.scheduled_at) >= new Date() && item.status !== 'cancelled'
+  )
+
   return (
-    <div style={{ minHeight: '100vh', background: '#f5fafa', fontFamily: 'Inter,sans-serif', color: DARK }}>
-      <nav style={{ height: 60, background: DARK, padding: '0 22px', display: 'flex', alignItems: 'center', gap: 18 }}>
-        <Link href="/dashboard/pro" style={navLink}>Tableau de bord</Link>
-        <Link href="/appointments" style={navLink}>Agenda</Link>
-        <Link href="/messages" style={navLink}>Messages</Link>
-        <Link href="/admin/mediatheque" style={navLink}>Ressources</Link>
-        <Link href="/profile" style={{ ...navLink, marginLeft: 'auto' }}>Profil</Link>
-      </nav>
+    <div className="workspace">
+      <Sidebar patientCount={patients.length} />
 
-      <main style={{ maxWidth: 1150, margin: '0 auto', padding: '28px 16px' }}>
-        <div style={{ marginBottom: 22 }}>
-          <p style={{ color: T, textTransform: 'uppercase', letterSpacing: 1.5, fontSize: 11, fontWeight: 800, margin: 0 }}>Espace professionnel</p>
-          <h1 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 30, margin: '7px 0' }}>Mes patients</h1>
-          <p style={{ color: '#64748b', margin: 0 }}>Tous les patients ayant eu ou planifie un rendez-vous avec vous.</p>
+      <aside className="patient-panel">
+        <header>
+          <div className="panel-title"><h1>Patients</h1><span>{visiblePatients.length} / {patients.length}</span></div>
+          <label className="search"><span>⌕</span><input value={search} onChange={event => setSearch(event.target.value)} placeholder="Rechercher un patient..." /></label>
+          <div className="filters">
+            {[
+              ['all', 'Tous'],
+              ['active', 'Actifs'],
+              ['inactive', 'Inactifs'],
+            ].map(([value, label]) => (
+              <button key={value} className={filter === value ? 'selected' : ''} onClick={() => setFilter(value as typeof filter)}>{label}</button>
+            ))}
+          </div>
+        </header>
+
+        <div className="patient-list">
+          {loading && <div className="list-empty">Chargement des dossiers...</div>}
+          {!loading && visiblePatients.length === 0 && <div className="list-empty">Aucun patient trouvé.</div>}
+          {visiblePatients.map(patient => {
+            const latest = patient.appointments[0]
+            const upcoming = patient.appointments.find(item => new Date(item.scheduled_at) >= new Date() && item.status !== 'cancelled')
+            return (
+              <button key={patient.id} onClick={() => choosePatient(patient)} className={`patient-item ${selectedId === patient.id ? 'selected' : ''}`}>
+                <div className="small-avatar">
+                  {patient.avatar_url ? <img src={patient.avatar_url} alt="" /> : patient.name?.[0]?.toUpperCase()}
+                </div>
+                <div className="patient-copy">
+                  <div className="name-row"><strong>{patient.name}</strong><span className={hasUpcoming(patient) ? 'status active' : 'status'}>{hasUpcoming(patient) ? '● Actif' : '○ Inactif'}</span></div>
+                  <span>{ageFromBirthDate(patient.birth_date) ? `${ageFromBirthDate(patient.birth_date)} ans` : patient.email}</span>
+                  <div className="dates"><small>Dernière séance : {relativeDate(latest?.scheduled_at)}</small>{upcoming && <em>▦ {dateLabel(upcoming.scheduled_at)}</em>}</div>
+                </div>
+              </button>
+            )
+          })}
         </div>
-        {error && <div style={{ padding: 12, borderRadius: 12, background: '#fee2e2', color: '#991b1b', marginBottom: 14 }}>{error}</div>}
-        {message && <div style={{ padding: 12, borderRadius: 12, background: '#eaf8f6', color: '#087f73', marginBottom: 14 }}>{message}</div>}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(240px,320px) 1fr', gap: 18 }}>
-          <aside style={card}>
-            <strong>{patients.length} patient{patients.length > 1 ? 's' : ''}</strong>
-            <div style={{ marginTop: 14, display: 'grid', gap: 7 }}>
-              {patients.length === 0 && <p style={{ color: '#64748b' }}>Aucun patient pour le moment.</p>}
-              {patients.map(patient => (
-                <button key={patient.id} onClick={() => selectPatient(patient)} style={{
-                  border: `1px solid ${selected?.id === patient.id ? T : '#dceeed'}`,
-                  background: selected?.id === patient.id ? '#eaf8f6' : '#fff',
-                  borderRadius: 13, padding: 13, textAlign: 'left', cursor: 'pointer',
-                }}>
-                  <strong style={{ display: 'block', color: DARK }}>{patient.name}</strong>
-                  <span style={{ color: '#64748b', fontSize: 12 }}>{patient.email}</span>
+        <Link href="/appointments" className="add-patient">＋ Ajouter via un rendez-vous</Link>
+      </aside>
+
+      <main className="patient-detail">
+        {error && <div className="alert error">{error}</div>}
+        {notice && <div className="alert success">{notice}</div>}
+
+        {!selected ? (
+          <div className="empty-detail"><div className="empty-icons">◉　▤　◌</div><h2>Sélectionnez un patient</h2><p>Choisissez un dossier à gauche pour consulter les séances, les notes cliniques et les ressources partagées.</p></div>
+        ) : (
+          <>
+            <header className="patient-header">
+              <div className="large-avatar">
+                {selected.avatar_url ? <img src={selected.avatar_url} alt="" /> : selected.name?.[0]?.toUpperCase()}
+              </div>
+              <div className="identity">
+                <div><h2>{selected.name}</h2>{age !== null && <span>· {age} ans</span>}<span className={hasUpcoming(selected) ? 'status active' : 'status'}>{hasUpcoming(selected) ? '● Actif' : '○ Inactif'}</span></div>
+                <p>✉ {selected.email}{selected.phone ? <><span>•</span> ☎ {selected.phone}</> : null}</p>
+              </div>
+              <div className="header-actions">
+                <Link href="/messages" className="secondary-action">Ouvrir les messages</Link>
+                <Link href="/appointments" className="primary-action">▦ Gérer les rendez-vous</Link>
+              </div>
+            </header>
+
+            <nav className="tabs">
+              <button className={activeTab === 'history' ? 'active' : ''} onClick={() => setActiveTab('history')}>▤ Historique</button>
+              <button className={activeTab === 'notes' ? 'active' : ''} onClick={() => setActiveTab('notes')}>✎ Notes cliniques</button>
+              <button className={activeTab === 'resources' ? 'active' : ''} onClick={() => setActiveTab('resources')}>▦ Ressources partagées</button>
+            </nav>
+
+            <section className="tab-content">
+              {activeTab === 'history' && (
+                <div className="content-column">
+                  <div className="section-heading"><h3>Séances ({selected.appointments.length})</h3><span>{selected.appointments.reduce((total, item) => total + item.duration_minutes, 0)} min au total</span></div>
+                  {selected.appointments.map((appointment, index) => (
+                    <article className="session-card" key={appointment.id}>
+                      <div className="session-top">
+                        <div><span className="session-dot" /><div><strong>Séance {appointment.type === 'video' ? 'vidéo' : appointment.type === 'phone' ? 'téléphonique' : 'au cabinet'}</strong><small>{dateLabel(appointment.scheduled_at, true)} · {appointment.duration_minutes} min</small></div></div>
+                        <div><span className={`appointment-status ${appointment.status}`}>{STATUS_LABELS[appointment.status] || appointment.status}</span>{index === 0 && <span className="latest">Dernière séance</span>}</div>
+                      </div>
+                      <div className="session-summary">
+                        <strong>Informations de séance</strong>
+                        <p>{appointment.notes_for_pro || appointment.pro_notes || 'Aucune observation renseignée pour cette séance.'}</p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+
+              {activeTab === 'notes' && (
+                <div className="notes-layout">
+                  <div className="note-editor">
+                    <div className="section-heading"><div><h3>Note clinique privée</h3><p>Visible uniquement depuis votre espace professionnel.</p></div>{notice && <span className="saved">✓ Sauvegardé</span>}</div>
+                    <label className="field-label">Séance concernée</label>
+                    <select value={appointmentId} onChange={event => chooseAppointment(event.target.value)}>
+                      {selected.appointments.map(item => <option key={item.id} value={item.id}>{dateLabel(item.scheduled_at, true)} · {STATUS_LABELS[item.status] || item.status}</option>)}
+                    </select>
+                    <textarea value={note} onChange={event => setNote(event.target.value)} placeholder="Observations cliniques, suivi, objectifs de la prochaine séance..." />
+                    <button className="save-button" onClick={saveNote} disabled={saving || !selectedAppointment}>{saving ? 'Sauvegarde...' : 'Sauvegarder la note'}</button>
+                    <small className="privacy">🔒 Note confidentielle attachée à cette séance.</small>
+                  </div>
+                  <aside className="note-history">
+                    <h4>Notes par séance</h4>
+                    {selected.appointments.map(item => (
+                      <button key={item.id} className={item.id === appointmentId ? 'current' : ''} onClick={() => chooseAppointment(item.id)}>
+                        <strong>{dateLabel(item.scheduled_at)}</strong>
+                        <span>{item.pro_notes ? `${item.pro_notes.slice(0, 70)}${item.pro_notes.length > 70 ? '…' : ''}` : 'Aucune note'}</span>
+                      </button>
+                    ))}
+                  </aside>
+                </div>
+              )}
+
+              {activeTab === 'resources' && (
+                <div className="content-column">
+                  <div className="section-heading"><div><h3>Ressources partagées ({selected.shared_resources.length})</h3><p>Les ressources sont envoyées dans la conversation avec le patient.</p></div><button className="share-button" onClick={() => setShowPicker(true)}>＋ Partager une ressource</button></div>
+                  {selected.shared_resources.length === 0 ? (
+                    <div className="resource-empty"><span>▦</span><strong>Aucune ressource partagée</strong><p>Choisissez un contenu validé dans votre médiathèque professionnelle.</p></div>
+                  ) : selected.shared_resources.map(resource => (
+                    <article className="resource-card" key={resource.id}>
+                      <div className="resource-icon">▤</div>
+                      <div><strong>{resource.title}</strong><span>Partagée le {dateLabel(resource.shared_at, true)}</span></div>
+                      {resource.url && <a href={resource.url} target="_blank" rel="noreferrer">Voir ↗</a>}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        )}
+      </main>
+
+      {showPicker && (
+        <div className="modal-backdrop" onClick={() => setShowPicker(false)}>
+          <div className="resource-modal" onClick={event => event.stopPropagation()}>
+            <div className="modal-title"><div><h3>Choisir une ressource</h3><p>Elle sera envoyée au patient dans Messages.</p></div><button onClick={() => setShowPicker(false)}>×</button></div>
+            <div className="resource-options">
+              {resources.length === 0 && <p>Aucune ressource approuvée. Ajoutez-en depuis l’espace Ressources.</p>}
+              {resources.map(resource => (
+                <button key={resource.id} onClick={() => shareResource(resource)}>
+                  <span className="resource-icon">▤</span>
+                  <div><strong>{resource.title}</strong><small>{resource.description || resource.type || 'Ressource Capsule'}</small></div>
+                  <em>Envoyer →</em>
                 </button>
               ))}
             </div>
-          </aside>
-
-          <section style={card}>
-            {!selected ? <p style={{ color: '#64748b' }}>Sélectionnez un patient.</p> : (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, borderBottom: '1px solid #e5f2f0', paddingBottom: 18 }}>
-                  {selected.avatar_url
-                    ? <img src={selected.avatar_url} alt="" style={{ width: 58, height: 58, borderRadius: '50%', objectFit: 'cover' }} />
-                    : <div style={{ width: 58, height: 58, borderRadius: '50%', background: T, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 22, fontWeight: 800 }}>{selected.name?.[0]}</div>}
-                  <div>
-                    <h2 style={{ margin: 0, fontFamily: 'Outfit,sans-serif' }}>{selected.name}</h2>
-                    <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: 13 }}>{selected.email}{selected.phone ? ` · ${selected.phone}` : ''}</p>
-                  </div>
-                  <Link href="/messages" style={{ marginLeft: 'auto', color: T, fontWeight: 700, textDecoration: 'none' }}>Ouvrir les messages</Link>
-                </div>
-
-                <h3 style={heading}>Rendez-vous</h3>
-                <div style={{ display: 'grid', gap: 8 }}>
-                  {selected.appointments.map((appointment: any) => (
-                    <div key={appointment.id} style={row}>
-                      <span>{new Date(appointment.scheduled_at).toLocaleString('fr-FR')}</span>
-                      <strong style={{ color: appointment.status === 'confirmed' ? '#087f73' : '#b45309' }}>{appointment.status}</strong>
-                    </div>
-                  ))}
-                </div>
-
-                <h3 style={heading}>Note professionnelle privée</h3>
-                <select
-                  value={selectedAppointmentId}
-                  onChange={event => selectAppointment(selected, event.target.value)}
-                  style={{ width: '100%', border: '1px solid #cfe8e5', borderRadius: 12, padding: 12, background: '#fff', marginBottom: 10 }}
-                >
-                  {selected.appointments.map((appointment: any) => (
-                    <option key={appointment.id} value={appointment.id}>
-                      Séance du {new Date(appointment.scheduled_at).toLocaleString('fr-FR')}
-                    </option>
-                  ))}
-                </select>
-                <textarea value={note} onChange={e => setNote(e.target.value)} rows={7} placeholder="Observations et suivi..."
-                  style={{ width: '100%', border: '1px solid #cfe8e5', borderRadius: 13, padding: 14, resize: 'vertical' }} />
-                <button onClick={saveNote} disabled={saving} style={primaryButton}>{saving ? 'Sauvegarde...' : 'Sauvegarder la note'}</button>
-
-                <h3 style={heading}>Ressources partagées</h3>
-                <select defaultValue="" onChange={e => { shareResource(e.target.value); e.target.value = '' }}
-                  style={{ width: '100%', border: '1px solid #cfe8e5', borderRadius: 12, padding: 12, background: '#fff' }}>
-                  <option value="" disabled>Choisir une ressource approuvée...</option>
-                  {resources.map(resource => (
-                    <option key={resource.id} value={resource.id}>{resource.title}</option>
-                  ))}
-                </select>
-                <p style={{ color: '#64748b', fontSize: 12 }}>La ressource sélectionnée est envoyée directement dans Messages.</p>
-              </>
-            )}
-          </section>
+            <Link href="/admin/mediatheque" className="manage-resources">Gérer la médiathèque professionnelle</Link>
+          </div>
         </div>
-      </main>
-      <style>{`@media(max-width:760px){main>div:last-child{grid-template-columns:1fr!important}nav{overflow-x:auto}}`}</style>
+      )}
+
+      <style jsx global>{`
+        *{box-sizing:border-box}.workspace{height:100vh;display:flex;overflow:hidden;background:#f7f9fc;color:#17233b;font-family:Inter,system-ui,sans-serif}
+        .pro-sidebar{width:238px;flex:none;background:#fff;border-right:1px solid #e4e9f0;padding:24px 12px;display:flex;flex-direction:column}
+        .brand{display:flex;align-items:center;gap:11px;padding:0 10px 28px}.brand-mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#1e3a5f,#30b4a7);display:grid;place-items:center;color:white;font-family:Outfit;font-size:20px;font-weight:900}.brand strong,.brand span{display:block}.brand strong{color:#163852;font-family:Outfit}.brand span{font-size:11px;color:#8491a3;margin-top:2px}
+        .side-nav{display:grid;gap:4}.side-nav a{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:11px;color:#64748b;text-decoration:none;font-size:13px}.side-nav a:hover,.side-nav a.active{background:#eaf8f6;color:#176d66;font-weight:700}.nav-icon{width:22px;text-align:center;font-size:17px}.plan-card{margin-top:auto;background:linear-gradient(135deg,#eef8f7,#f4f8fd);border:1px solid #d7e9e7;border-radius:14px;padding:14px}.plan-card span,.plan-card strong{display:block}.plan-card span{font-size:11px;color:#718096}.plan-card strong{font-size:13px;color:#176d66;margin-top:5px}
+        .patient-panel{width:330px;flex:none;background:#fff;border-right:1px solid #e4e9f0;display:flex;flex-direction:column}.patient-panel header{padding:24px 17px 16px;border-bottom:1px solid #eef1f5}.panel-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.panel-title h1{font:800 24px Outfit;margin:0;color:#163852}.panel-title span{background:#f0f4f8;color:#64748b;border-radius:99px;padding:4px 10px;font-size:11px}.search{display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e1e7ee;border-radius:11px;padding:10px 12px}.search input{border:0;outline:0;background:transparent;width:100%;font:inherit;font-size:13px}.filters{display:flex;background:#f0f4f8;border-radius:10px;padding:4px;margin-top:11px}.filters button{flex:1;border:0;background:transparent;padding:7px;border-radius:7px;color:#718096;cursor:pointer}.filters button.selected{background:white;color:#163852;font-weight:700;box-shadow:0 1px 5px #cad3df80}
+        .patient-list{flex:1;overflow:auto;padding:11px}.patient-item{width:100%;border:1px solid transparent;background:transparent;border-radius:14px;padding:12px;display:flex;gap:11px;text-align:left;cursor:pointer;margin-bottom:4px}.patient-item:hover,.patient-item.selected{background:linear-gradient(135deg,#eef8f7,#f5f9fd);border-color:#b9dfdb}.small-avatar,.large-avatar{background:linear-gradient(135deg,#30b4a7,#1e3a5f);color:#fff;display:grid;place-items:center;font-weight:800;overflow:hidden;flex:none}.small-avatar{width:43px;height:43px;border-radius:50%}.large-avatar{width:68px;height:68px;border-radius:20px;font-size:25px;box-shadow:0 7px 20px #1e3a5f24}.small-avatar img,.large-avatar img{width:100%;height:100%;object-fit:cover}.patient-copy{flex:1;min-width:0}.name-row{display:flex;align-items:center;justify-content:space-between;gap:6px}.name-row strong{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.patient-copy>span{display:block;color:#718096;font-size:11px;margin:3px 0 6px}.status{font-size:10px;color:#7c8797;background:#edf1f5;border-radius:99px;padding:3px 7px;white-space:nowrap}.status.active{color:#087f73;background:#dff6f2}.dates{display:flex;justify-content:space-between;align-items:center;gap:6px}.dates small{color:#9aa5b3;font-size:9px}.dates em{font-style:normal;color:#176d66;background:#e3f5f2;border-radius:6px;padding:2px 5px;font-size:9px}.list-empty{padding:40px 15px;text-align:center;color:#98a2b3}.add-patient{margin:12px 16px;padding:12px;border:1px dashed #8fc9c3;border-radius:11px;text-align:center;color:#176d66;text-decoration:none;font-size:12px;font-weight:700}
+        .patient-detail{flex:1;min-width:0;display:flex;flex-direction:column;position:relative}.alert{position:absolute;right:22px;top:14px;z-index:5;padding:10px 15px;border-radius:10px;font-size:12px;box-shadow:0 8px 30px #1e293b20}.alert.success{background:#dff6f2;color:#087f73}.alert.error{background:#fee2e2;color:#991b1b}.empty-detail{margin:auto;max-width:440px;text-align:center;background:white;border:1px solid #e1e7ee;border-radius:24px;padding:42px;box-shadow:0 18px 55px #1e293b0b}.empty-icons{font-size:32px;color:#30b4a7;letter-spacing:8px}.empty-detail h2{font:800 22px Outfit;color:#163852}.empty-detail p{color:#718096;line-height:1.7;font-size:14px}
+        .patient-header{background:linear-gradient(135deg,#f0f8f7,#f6f8fc);border-bottom:1px solid #e1e7ee;padding:24px 30px;display:flex;align-items:center;gap:18px}.identity{flex:1}.identity>div{display:flex;align-items:center;gap:10px}.identity h2{font:800 25px Outfit;margin:0;color:#163852}.identity>div>span:not(.status){color:#718096}.identity p{color:#718096;font-size:12px;margin:8px 0 0}.identity p span{margin:0 9px;color:#c2cad4}.header-actions{display:flex;gap:9px}.header-actions a{padding:10px 15px;border-radius:10px;text-decoration:none;font-size:12px;font-weight:700}.secondary-action{border:1px solid #cbd5e1;color:#36556f;background:white}.primary-action{background:linear-gradient(135deg,#1e3a5f,#30b4a7);color:#fff;box-shadow:0 5px 16px #1e3a5f28}
+        .tabs{display:flex;background:#fff;border-bottom:1px solid #e1e7ee;padding:0 30px}.tabs button{border:0;border-bottom:3px solid transparent;background:transparent;padding:16px 20px;color:#718096;cursor:pointer;font-weight:600}.tabs button.active{color:#176d66;border-color:#30b4a7}.tab-content{flex:1;overflow:auto;padding:27px 30px}.content-column{max-width:850px}.section-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.section-heading h3{font:800 19px Outfit;color:#163852;margin:0}.section-heading p{font-size:12px;color:#8491a3;margin:5px 0 0}.section-heading>span{font-size:12px;color:#718096}
+        .session-card{background:#fff;border:1px solid #e0e7ee;border-radius:17px;padding:20px 22px;margin-bottom:14px;box-shadow:0 3px 12px #1e293b08}.session-top,.session-top>div{display:flex;align-items:center;justify-content:space-between;gap:10px}.session-top>div:first-child>div{display:grid;gap:3px}.session-top small{color:#718096}.session-dot{width:9px;height:9px;border-radius:50%;background:#30b4a7;box-shadow:0 0 0 5px #30b4a71a}.appointment-status,.latest{font-size:10px;border-radius:99px;padding:4px 9px}.appointment-status.confirmed,.appointment-status.completed{background:#dff6f2;color:#087f73}.appointment-status.pending{background:#fff1d6;color:#9a6200}.appointment-status.cancelled{background:#fee2e2;color:#991b1b}.latest{background:#e8eef7;color:#36556f}.session-summary{margin-top:15px;background:linear-gradient(135deg,#f5f8fc,#f3faf9);border:1px solid #e0ebee;border-radius:11px;padding:13px 15px}.session-summary strong{font-size:10px;color:#176d66;text-transform:uppercase;letter-spacing:.08em}.session-summary p{font-size:12px;color:#596779;line-height:1.6;margin:7px 0 0}
+        .notes-layout{max-width:1000px;display:grid;grid-template-columns:minmax(0,1fr) 235px;gap:24px}.note-editor{background:#fff;border:1px solid #e0e7ee;border-radius:18px;padding:22px}.field-label{font-size:11px;color:#64748b;font-weight:700;display:block;margin:15px 0 6px}.note-editor select,.note-editor textarea{width:100%;border:1px solid #d7e1e9;border-radius:11px;background:#fbfdff;padding:12px;font:inherit;color:#17233b;outline:none}.note-editor textarea{min-height:285px;resize:vertical;line-height:1.65;margin-top:11px}.save-button,.share-button{border:0;border-radius:10px;background:linear-gradient(135deg,#1e3a5f,#30b4a7);color:white;font-weight:700;padding:11px 18px;cursor:pointer}.save-button{margin-top:12px}.save-button:disabled{opacity:.55}.privacy{display:block;color:#8a96a6;margin-top:10px}.saved{color:#087f73!important;font-weight:700}.note-history{background:white;border:1px solid #e0e7ee;border-radius:18px;padding:17px;height:max-content}.note-history h4{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#718096;margin:0 0 10px}.note-history button{width:100%;border:1px solid #e5eaf0;background:#fafcfe;border-radius:10px;padding:11px;text-align:left;margin-bottom:7px;cursor:pointer}.note-history button.current{border-color:#8fc9c3;background:#edf9f7}.note-history strong,.note-history span{display:block}.note-history strong{font-size:11px;color:#176d66}.note-history span{font-size:10px;color:#718096;line-height:1.45;margin-top:4px}
+        .resource-empty{border:1px dashed #b8d9d5;background:#f7fbfb;border-radius:17px;padding:45px;text-align:center;color:#718096}.resource-empty>span{display:block;font-size:35px;color:#30b4a7}.resource-empty strong{display:block;color:#163852;margin:10px}.resource-card{display:flex;align-items:center;gap:14px;background:white;border:1px solid #e0e7ee;border-radius:14px;padding:15px 18px;margin-bottom:10px}.resource-icon{width:42px;height:42px;border-radius:11px;background:#e4f6f3;color:#176d66;display:grid;place-items:center;font-size:19px;flex:none}.resource-card>div:nth-child(2){flex:1}.resource-card strong,.resource-card span{display:block}.resource-card strong{font-size:13px}.resource-card span{font-size:11px;color:#8491a3;margin-top:4px}.resource-card a{color:#176d66;text-decoration:none;font-size:12px;font-weight:700}
+        .modal-backdrop{position:fixed;inset:0;background:#0f172a73;backdrop-filter:blur(5px);z-index:20;display:grid;place-items:center;padding:20px}.resource-modal{width:min(580px,100%);max-height:80vh;overflow:auto;background:white;border-radius:22px;padding:25px;box-shadow:0 30px 90px #0f172a55}.modal-title{display:flex;justify-content:space-between}.modal-title h3{font:800 20px Outfit;color:#163852;margin:0}.modal-title p{color:#718096;font-size:12px}.modal-title button{border:0;background:#eef2f6;border-radius:50%;width:32px;height:32px;font-size:20px;cursor:pointer}.resource-options{display:grid;gap:8px;margin:18px 0}.resource-options>button{display:flex;align-items:center;gap:12px;border:1px solid #e0e7ee;background:#fbfdff;border-radius:13px;padding:12px;text-align:left;cursor:pointer}.resource-options>button:hover{border-color:#8fc9c3;background:#f0faf8}.resource-options>button>div:nth-child(2){flex:1}.resource-options strong,.resource-options small{display:block}.resource-options small{color:#718096;margin-top:4px}.resource-options em{font-style:normal;color:#176d66;font-size:11px;font-weight:700}.manage-resources{display:block;text-align:center;color:#176d66;text-decoration:none;font-size:12px;font-weight:700}
+        @media(max-width:1050px){.pro-sidebar{width:78px}.brand>div:last-child,.side-nav a:not(.active){font-size:0}.brand{padding-left:8px}.side-nav a{justify-content:center}.side-nav a.active{font-size:0}.plan-card{display:none}.patient-panel{width:300px}.header-actions{flex-direction:column}.notes-layout{grid-template-columns:1fr}}
+        @media(max-width:760px){.workspace{height:auto;min-height:100vh;overflow:auto}.pro-sidebar{display:none}.patient-panel{width:100%;height:auto;max-height:44vh;position:fixed;top:0;z-index:10}.patient-detail{padding-top:44vh;min-height:100vh}.patient-header{align-items:flex-start;flex-wrap:wrap;padding:20px}.header-actions{width:100%;flex-direction:row}.tabs{padding:0;overflow:auto}.tabs button{white-space:nowrap;padding:14px}.tab-content{padding:18px}.notes-layout{display:block}.note-history{margin-top:15px}.identity p{line-height:1.8}}
+      `}</style>
     </div>
   )
 }
-
-const navLink: React.CSSProperties = { color: '#d7efec', textDecoration: 'none', fontSize: 13, whiteSpace: 'nowrap' }
-const card: React.CSSProperties = { background: '#fff', border: '1px solid #daeeed', borderRadius: 20, padding: 22, boxShadow: '0 3px 16px rgba(8,40,39,.05)' }
-const heading: React.CSSProperties = { fontFamily: 'Outfit,sans-serif', margin: '26px 0 12px', fontSize: 17 }
-const row: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', gap: 12, padding: 12, borderRadius: 11, background: '#f5fafa', fontSize: 13 }
-const primaryButton: React.CSSProperties = { marginTop: 10, border: 0, borderRadius: 99, padding: '11px 20px', background: T, color: '#fff', fontWeight: 800, cursor: 'pointer' }

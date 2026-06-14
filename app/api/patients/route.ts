@@ -27,14 +27,43 @@ export async function GET(req: NextRequest) {
     .eq('approved', true)
     .order('created_at', { ascending: false })
 
-  const patients = patientIds.map(patientId => {
+  const patients = await Promise.all(patientIds.map(async patientId => {
     const sessions = (appointments ?? []).filter((a: any) => a.patient_id === patientId)
+    const appointmentIds = sessions.map((appointment: any) => appointment.id)
+    let sharedResources: any[] = []
+    if (appointmentIds.length) {
+      const { data: conversations } = await supabase
+        .from('conversations')
+        .select('id')
+        .in('appointment_id', appointmentIds)
+      const conversationIds = (conversations ?? []).map((conversation: any) => conversation.id)
+      if (conversationIds.length) {
+        const { data: messages } = await supabase
+          .from('messages')
+          .select('id,content,created_at')
+          .in('conversation_id', conversationIds)
+          .eq('sender_id', user.id)
+          .like('content', 'Ressource partagee :%')
+          .order('created_at', { ascending: false })
+        sharedResources = (messages ?? []).map((message: any) => {
+          const value = String(message.content).replace(/^Ressource partagee :\s*/, '')
+          const separator = value.lastIndexOf(' - http')
+          return {
+            id: message.id,
+            title: separator >= 0 ? value.slice(0, separator) : value,
+            url: separator >= 0 ? value.slice(separator + 3) : null,
+            shared_at: message.created_at,
+          }
+        })
+      }
+    }
     return {
       ...(sessions[0] as any).patient,
       appointments: sessions,
       note: sessions.find((appointment: any) => appointment.pro_notes)?.pro_notes ?? '',
+      shared_resources: sharedResources,
     }
-  })
+  }))
   return NextResponse.json({ patients, resources: resources ?? [] })
 }
 
