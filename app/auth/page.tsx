@@ -150,6 +150,9 @@ function AuthContent() {
         @media(max-width:900px){.auth-panel{display:none!important}}
         .nav-link-auth{text-decoration:none;font-size:13.5px;font-weight:500;color:#444;transition:color .15s}
         .nav-link-auth:hover{color:${T}}
+        .auth-nav-links{display:flex}
+        .auth-nav-cta{display:block}
+        @media(max-width:640px){.auth-nav-links{display:none!important}.auth-nav-cta{display:none!important}}
       `}</style>
 
       {/* Nav */}
@@ -157,7 +160,7 @@ function AuthContent() {
         <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
           <Image src="/logo.png" alt="Capsule" width={36} height={36} style={{ objectFit: 'contain' }} />
         </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+        <div className="auth-nav-links" style={{ alignItems: 'center', gap: 24 }}>
           {[
             { label: 'Accueil', href: '/' },
             { label: 'Abonnements', href: '/abonnements' },
@@ -168,7 +171,7 @@ function AuthContent() {
             <Link key={l.href} href={l.href} className="nav-link-auth">{l.label}</Link>
           ))}
         </div>
-        <Link href="/dons" style={{ padding: '8px 20px', borderRadius: 100, border: `1.5px solid ${T}`, color: T, textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>Soutenez-nous</Link>
+        <Link href="/dons" className="auth-nav-cta" style={{ padding: '8px 20px', borderRadius: 100, border: `1.5px solid ${T}`, color: T, textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>Soutenez-nous</Link>
       </nav>
 
       {/* Body */}
