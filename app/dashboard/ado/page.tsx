@@ -147,16 +147,15 @@ export default function AdoDashboard() {
       `}</style>
 
       {/* Nav */}
-      <nav style={{ position:'sticky',top:0,zIndex:50,background:'rgba(10,10,10,0.92)',backdropFilter:'blur(16px)',borderBottom:'1px solid rgba(255,255,255,0.07)',padding:'0 24px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between' }}>
-        <Link href="/" style={{ display:'flex',alignItems:'center',gap:10,textDecoration:'none' }}>
+      <nav style={{ position:'sticky',top:0,zIndex:50,background:'rgba(10,10,10,0.92)',backdropFilter:'blur(16px)',borderBottom:'1px solid rgba(255,255,255,0.07)',padding:'0 20px',height:60,display:'flex',alignItems:'center',justifyContent:'space-between' }}>
+        <Link href="/" style={{ display:'flex',alignItems:'center',textDecoration:'none' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.svg" onError={e=>{(e.target as HTMLImageElement).src="/logo.png"}} alt="Capsule" style={{ height:32,objectFit:"contain" }} />
-          <span style={{ fontFamily:"'Audiowide',sans-serif",fontWeight:400,fontSize:16,color:'rgb(127,217,208)',letterSpacing:2 }}>CAPSULE</span>
+          <img src="/logo.png" alt="Capsule" style={{ height:34,objectFit:'contain' }} />
         </Link>
-        <div style={{ display:'flex',alignItems:'center',gap:16 }}>
-          <Link href="/mediatheque" style={{ fontSize:13,color:'#9ca3af',textDecoration:'none',fontWeight:500 }}>📚 Médiathèque</Link>
-          <Link href="/chat" style={{ fontSize:13,color:'#9ca3af',textDecoration:'none',fontWeight:500 }}>💬 Chat</Link>
-          <button onClick={()=>setSosOpen(true)} style={{ background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.3)',color:'rgb(252,165,165)',borderRadius:100,padding:'5px 12px',fontSize:12,fontWeight:700,cursor:'pointer',animation:'pulse 2.5s infinite' }}>🆘 SOS</button>
+        <div style={{ display:'flex',alignItems:'center',gap:8 }}>
+          <Link href="/mediatheque" style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Médiathèque</Link>
+          <Link href="/chat" style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Chat</Link>
+          <button onClick={()=>setSosOpen(true)} style={{ background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.3)',color:'rgb(252,165,165)',borderRadius:100,padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer' }}>SOS</button>
           <Link href="/profile" style={{ width:32,height:32,borderRadius:'50%',background:C.grad,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:700,fontSize:12,textDecoration:'none' }}>
             {(firstName[0]||'?').toUpperCase()}
           </Link>
