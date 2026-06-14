@@ -23,6 +23,10 @@ export default function DashboardRedirectPage() {
         .single()
 
       const profileType = profile?.profile_type
+      if (profileType === 'admin' || profileType === 'superadmin') {
+        router.replace('/admin')
+        return
+      }
       const role = profileType && ['ado', 'parent', 'pro'].includes(profileType)
         ? profileType
         : 'ado'

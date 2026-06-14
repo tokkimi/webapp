@@ -113,7 +113,8 @@ function AuthContent() {
       const userId = data.user?.id
       if (!userId) { setError('Connexion échouée. Réessaie.'); return }
       const { data: profile } = await supabase.from('profiles').select('profile_type').eq('id', userId).single()
-      router.push(`/dashboard/${profile?.profile_type ?? 'ado'}`)
+      const profileType = profile?.profile_type ?? 'ado'
+      router.push(['admin', 'superadmin'].includes(profileType) ? '/admin' : `/dashboard/${profileType}`)
     } catch {
       setError('Une erreur inattendue est survenue.')
     } finally {

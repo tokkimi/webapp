@@ -21,6 +21,8 @@ const Icon = {
 const NAV = [
   { key: 'overview', label: 'Vue d\'ensemble', icon: <Icon.chart /> },
   { key: 'users', label: 'Utilisateurs', icon: <Icon.users /> },
+  { key: 'pros', label: 'Validation des pros', icon: <Icon.heart /> },
+  { key: 'analytics', label: 'Visites', icon: <Icon.chart /> },
   { key: 'media', label: 'Médiathèque', icon: <Icon.media />, href: '/admin/mediatheque' },
   { key: 'appointments', label: 'Rendez-vous', icon: <Icon.cal /> },
   { key: 'newsletter', label: 'Newsletter', icon: <Icon.mail /> },
@@ -39,6 +41,8 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<StatCard[]>([])
   const [appts, setAppts] = useState<any[]>([])
   const [newsletters, setNewsletters] = useState<any[]>([])
+  const [pros, setPros] = useState<any[]>([])
+  const [visits, setVisits] = useState<any[]>([])
   const [usersLoaded, setUsersLoaded] = useState(false)
 
   useEffect(() => {
@@ -86,16 +90,42 @@ export default function AdminDashboard() {
     setNewsletters(data || [])
   }
 
+  const loadPros = async () => {
+    const { data } = await supabase.from('profiles')
+      .select('id,name,email,specialty,adeli_number,verified,verification_status,verification_notes,created_at')
+      .eq('profile_type', 'pro').order('created_at', { ascending: false })
+    setPros(data || [])
+  }
+
+  const loadAnalytics = async () => {
+    const { data } = await supabase.from('page_visits')
+      .select('id,path,session_id,referrer,created_at')
+      .order('created_at', { ascending: false }).limit(500)
+    setVisits(data || [])
+  }
+
   const switchTab = (key: string) => {
     setTab(key)
     if (key === 'users') loadUsers()
     if (key === 'appointments') loadAppointments()
     if (key === 'newsletter') loadNewsletter()
+    if (key === 'pros') loadPros()
+    if (key === 'analytics') loadAnalytics()
   }
 
   const verifyUser = async (id: string, val: boolean) => {
     await supabase.from('profiles').update({ verified: val }).eq('id', id)
     setUsers(u => u.map(x => x.id === id ? { ...x, verified: val } : x))
+  }
+
+  const setProVerification = async (id: string, verified: boolean) => {
+    const status = verified ? 'approved' : 'rejected'
+    await supabase.from('profiles').update({
+      verified,
+      verification_status: status,
+      verified_at: verified ? new Date().toISOString() : null,
+    }).eq('id', id)
+    setPros(current => current.map(pro => pro.id === id ? { ...pro, verified, verification_status: status } : pro))
   }
 
   const signOut = async () => {
@@ -143,6 +173,8 @@ export default function AdminDashboard() {
             <h1 style={{ fontSize: 24, fontWeight: 800, color: '#080f0e' }}>
               {tab === 'overview' && 'Vue d\'ensemble'}
               {tab === 'users' && 'Utilisateurs'}
+              {tab === 'pros' && 'Validation des professionnels'}
+              {tab === 'analytics' && 'Fréquentation du site'}
               {tab === 'appointments' && 'Rendez-vous'}
               {tab === 'newsletter' && 'Newsletter'}
               {tab === 'settings' && 'Paramètres'}
@@ -222,6 +254,46 @@ export default function AdminDashboard() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {tab === 'pros' && (
+            <div style={{ display:'grid',gap:14 }}>
+              {pros.length === 0 && <div style={{ background:'#fff',padding:32,borderRadius:16,color:'#888' }}>Aucun professionnel inscrit.</div>}
+              {pros.map(pro => (
+                <div key={pro.id} style={{ background:'#fff',border:'1px solid #e5eeed',borderRadius:16,padding:20,display:'grid',gridTemplateColumns:'1fr auto',gap:18 }}>
+                  <div>
+                    <div style={{ display:'flex',gap:9,alignItems:'center',flexWrap:'wrap' }}>
+                      <strong style={{ fontSize:16 }}>{pro.name || 'Professionnel sans nom'}</strong>
+                      <span style={{ padding:'3px 9px',borderRadius:99,fontSize:11,fontWeight:700,background:pro.verified?'#dff6f2':'#fff1d6',color:pro.verified?'#087f73':'#9a6200' }}>{pro.verified?'Certifié':'À contrôler'}</span>
+                    </div>
+                    <p style={{ margin:'6px 0',fontSize:13,color:'#64748b' }}>{pro.email} · {pro.specialty || 'Spécialité non renseignée'}</p>
+                    <p style={{ margin:0,fontSize:13,color:'#334155' }}><strong>ADELI / RPPS :</strong> {pro.adeli_number || 'Non renseigné'}</p>
+                  </div>
+                  <div style={{ display:'flex',gap:8,alignItems:'center' }}>
+                    <button onClick={() => setProVerification(pro.id,true)} style={{ border:0,borderRadius:9,padding:'9px 13px',background:'#30B4A7',color:'#fff',fontWeight:700,cursor:'pointer' }}>Certifier</button>
+                    <button onClick={() => setProVerification(pro.id,false)} style={{ border:'1px solid #fecaca',borderRadius:9,padding:'9px 13px',background:'#fff',color:'#b91c1c',fontWeight:700,cursor:'pointer' }}>Refuser</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {tab === 'analytics' && (
+            <div>
+              <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:14,marginBottom:20 }}>
+                {[
+                  ['Pages vues', visits.length],
+                  ['Visiteurs', new Set(visits.map(v=>v.session_id).filter(Boolean)).size],
+                  ['Pages consultées', new Set(visits.map(v=>v.path)).size],
+                ].map(([label,value]) => <div key={String(label)} style={{ background:'#fff',border:'1px solid #e5eeed',borderRadius:16,padding:20 }}><span style={{ color:'#64748b',fontSize:12 }}>{label}</span><strong style={{ display:'block',font:'800 30px Outfit',color:T,marginTop:6 }}>{value}</strong></div>)}
+              </div>
+              <div style={{ background:'#fff',border:'1px solid #e5eeed',borderRadius:16,overflow:'hidden' }}>
+                <table style={{ width:'100%',borderCollapse:'collapse',fontSize:13 }}>
+                  <thead><tr style={{ background:'#f8fafa' }}>{['Page','Date','Provenance'].map(h=><th key={h} style={{ padding:13,textAlign:'left' }}>{h}</th>)}</tr></thead>
+                  <tbody>{visits.slice(0,100).map(visit=><tr key={visit.id} style={{ borderTop:'1px solid #eef2f1' }}><td style={{ padding:13,fontWeight:600 }}>{visit.path}</td><td style={{ padding:13,color:'#64748b' }}>{new Date(visit.created_at).toLocaleString('fr-FR')}</td><td style={{ padding:13,color:'#64748b' }}>{visit.referrer || 'Accès direct'}</td></tr>)}</tbody>
+                </table>
+              </div>
             </div>
           )}
 

@@ -33,6 +33,8 @@ export default function AdminMediatheque() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [file, setFile] = useState<File | null>(null)
+  const [error, setError] = useState('')
   const [form, setForm] = useState({
     title: '', description: '', url: '', type: 'article', category: 'anxiety',
     target_profile: 'all', tags: '', approved: false,
@@ -57,14 +59,33 @@ export default function AdminMediatheque() {
 
   async function saveResource() {
     setSaving(true)
+    setError('')
     const { data: { user } } = await supabase.auth.getUser()
     const tags = form.tags.split(',').map(t => t.trim()).filter(Boolean)
-    await supabase.from('resources').insert({
+    let fileUrl: string | null = null
+    if (file && user) {
+      const path = `${user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '-')}`
+      const upload = await supabase.storage.from('resources').upload(path, file)
+      if (upload.error) {
+        setError(upload.error.message)
+        setSaving(false)
+        return
+      }
+      fileUrl = supabase.storage.from('resources').getPublicUrl(path).data.publicUrl
+    }
+    const { error: insertError } = await supabase.from('resources').insert({
       title: form.title, description: form.description, url: form.url || null,
       type: form.type, category: form.category, target_profile: form.target_profile,
-      tags, approved: form.approved, created_by: user?.id,
+      tags, approved: ['admin','superadmin'].includes(profile?.profile_type) ? form.approved : false,
+      created_by: user?.id, file_url: fileUrl, file_name: file?.name || null, file_size: file?.size || null,
     })
+    if (insertError) {
+      setError(insertError.message)
+      setSaving(false)
+      return
+    }
     setForm({ title:'',description:'',url:'',type:'article',category:'anxiety',target_profile:'all',tags:'',approved:false })
+    setFile(null)
     setShowForm(false)
     setSaving(false)
     loadResources()
@@ -102,6 +123,7 @@ export default function AdminMediatheque() {
             <h1 style={{ fontFamily:'Outfit,sans-serif',fontSize:24,fontWeight:800,color:'#1A1A2E',margin:'0 0 4px' }}>Gestion de la Médiathèque</h1>
             <p style={{ color:'#6B7280',fontSize:13,margin:0 }}>{resources.filter(r=>!r.approved).length} en attente · {resources.filter(r=>r.approved).length} approuvées</p>
           </div>
+          {error && <div style={{ width:'100%',padding:12,borderRadius:10,background:'#fee2e2',color:'#991b1b' }}>{error}</div>}
           <button onClick={() => setShowForm(!showForm)} style={{ background:'#1E3A5F',color:'#fff',border:'none',borderRadius:12,padding:'10px 20px',fontSize:14,fontWeight:600,cursor:'pointer' }}>
             {showForm ? '✕ Annuler' : '+ Ajouter une ressource'}
           </button>
@@ -143,16 +165,21 @@ export default function AdminMediatheque() {
                   style={{ width:'100%',padding:'10px 14px',border:'1px solid #E5E7EB',borderRadius:10,fontSize:14,fontFamily:'Inter,sans-serif',outline:'none',resize:'vertical',boxSizing:'border-box' }}
                   placeholder="Brève description de la ressource…" />
               </div>
+              <div style={{ gridColumn:'1/-1' }}>
+                <label style={{ fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6 }}>Importer un fichier (PDF, image, audio ou vidéo)</label>
+                <input type="file" accept=".pdf,image/*,audio/mpeg,audio/mp4,video/mp4" onChange={e => setFile(e.target.files?.[0] || null)}
+                  style={{ width:'100%',padding:12,border:'1px dashed #94cfc9',borderRadius:10,background:'#f6fbfa' }} />
+              </div>
               <div>
                 <label style={{ fontSize:13,fontWeight:600,color:'#374151',display:'block',marginBottom:6 }}>Tags (séparés par virgule)</label>
                 <input type="text" value={form.tags} onChange={e => setForm({...form,tags:e.target.value})}
                   placeholder="stress, adolescent, outil…"
                   style={{ width:'100%',padding:'10px 14px',border:'1px solid #E5E7EB',borderRadius:10,fontSize:14,fontFamily:'Inter,sans-serif',outline:'none',boxSizing:'border-box' }} />
               </div>
-              <div style={{ display:'flex',alignItems:'center',gap:10 }}>
+              {['admin','superadmin'].includes(profile?.profile_type) && <div style={{ display:'flex',alignItems:'center',gap:10 }}>
                 <input type="checkbox" id="approved" checked={form.approved} onChange={e => setForm({...form,approved:e.target.checked})} />
                 <label htmlFor="approved" style={{ fontSize:14,color:'#374151',cursor:'pointer' }}>Approuver immédiatement</label>
-              </div>
+              </div>}
             </div>
             <div style={{ marginTop:18,display:'flex',gap:10 }}>
               <button onClick={saveResource} disabled={saving||!form.title}
