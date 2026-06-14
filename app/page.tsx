@@ -25,6 +25,28 @@ const Icon = {
   linkedin: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>,
 }
 
+function Countdown() {
+  const target = new Date('2026-09-01T00:00:00Z')
+  const [diff, setDiff] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+  useEffect(() => {
+    const tick = () => {
+      const d = Math.max(0, target.getTime() - Date.now())
+      setDiff({ days: Math.floor(d/86400000), hours: Math.floor((d%86400000)/3600000), minutes: Math.floor((d%3600000)/60000), seconds: Math.floor((d%60000)/1000) })
+    }
+    tick(); const id = setInterval(tick, 1000); return () => clearInterval(id)
+  }, [])
+  return (
+    <div style={{ display: 'flex', gap: 24, justifyContent: 'center', flexWrap: 'wrap' }}>
+      {[{v:diff.days,l:'jours'},{v:diff.hours,l:'heures'},{v:diff.minutes,l:'min'},{v:diff.seconds,l:'sec'}].map(({v,l}) => (
+        <div key={l} style={{ textAlign: 'center', minWidth: 72 }}>
+          <div style={{ fontFamily: "'Outfit',sans-serif", fontSize: 'clamp(32px,5vw,56px)', fontWeight: 900, color: 'white', lineHeight: 1 }}>{String(v).padStart(2,'0')}</div>
+          <div style={{ fontSize: 10, color: 'rgba(255,255,255,.45)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 6 }}>{l}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 const navLinks = [
   { label: 'Accueil', href: '/' },
   { label: 'Abonnements', href: '/abonnements' },
@@ -55,7 +77,7 @@ export default function Home() {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: '#111' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800;900&family=Chakra+Petch:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800;900&family=Audiowide&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
         .nav-link{text-decoration:none;font-size:13.5px;font-weight:500;transition:color .15s}
         .nav-link:hover{color:${T}!important}
@@ -165,7 +187,7 @@ export default function Home() {
                 <span style={{ fontSize: 11, fontWeight: 700, color: T, letterSpacing: 1.5, textTransform: 'uppercase' }}>Bien-être & Santé mentale</span>
               </div>
 
-              <h1 style={{ fontFamily: "'Chakra Petch', sans-serif", fontSize: 'clamp(56px,8vw,100px)', fontWeight: 700, lineHeight: .95, letterSpacing: 6, color: T, marginBottom: 20 }}>CAPSULE</h1>
+              <h1 style={{ fontFamily: "'Audiowide', sans-serif", fontSize: 'clamp(42px,7vw,88px)', fontWeight: 400, lineHeight: 1, letterSpacing: 2, color: T, marginBottom: 20 }}>CAPSULE</h1>
 
               <h2 style={{ fontSize: 'clamp(26px,4vw,44px)', fontWeight: 700, color: 'white', marginBottom: 18, lineHeight: 1.15 }}>
                 c&apos;est quoi ?
@@ -252,6 +274,18 @@ export default function Home() {
         <a href="#plateforme" style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', color: 'rgba(255,255,255,.3)', animation: 'scrollBounce 2.2s infinite', textDecoration: 'none' }}>
           <Icon.arrowDown />
         </a>
+      </section>
+
+      {/* ══════════════ COUNTDOWN ══════════════ */}
+      <section style={{ background: T, padding: '48px 24px', textAlign: 'center' }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.7)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 }}>Lancement officiel</p>
+        <p style={{ fontFamily: "'Outfit',sans-serif", fontSize: 'clamp(16px,2.5vw,22px)', fontWeight: 800, color: 'white', marginBottom: 28 }}>1er septembre 2026 — Capsule ouvre ses portes</p>
+        <Countdown />
+        <div style={{ marginTop: 28 }}>
+          <Link href="/auth?mode=register" style={{ display: 'inline-block', padding: '12px 28px', borderRadius: 100, background: 'white', color: T, textDecoration: 'none', fontWeight: 800, fontSize: 14 }}>
+            Rejoindre en avant-première
+          </Link>
+        </div>
       </section>
 
       {/* ══════════════ PLATEFORME ══════════════ */}
