@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Outfit } from 'next/font/google'
 import './globals.css'
+import CookieBanner from '@/components/CookieBanner'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -70,7 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="theme-color" content="#30B4A7" />
         <meta name="color-scheme" content="light" />
       </head>
-      <body>{children}</body>
+      <body>{children}<CookieBanner /></body>
     </html>
   )
 }

@@ -95,7 +95,7 @@ export default function Home() {
       }}>
         <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 24px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <Image src="/logo.svg" alt="Capsule" width={32} height={32} />
+            <Image src="/logo.png" alt="Capsule" width={32} height={32} />
             <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 900, fontSize: 18, letterSpacing: 3, color: scrolled ? T : 'white' }}>CAPSULE</span>
           </Link>
 
@@ -202,7 +202,7 @@ export default function Home() {
                   boxShadow: '0 40px 80px rgba(0,0,0,.35)',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>
-                    <Image src="/logo.svg" alt="Capsule" width={32} height={32} />
+                    <Image src="/logo.png" alt="Capsule" width={32} height={32} />
                     <div>
                       <div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 900, fontSize: 14, color: 'white', letterSpacing: 2 }}>CAPSULE</div>
                       <div style={{ fontSize: 10, color: T, letterSpacing: 1 }}>bien-être santé mentale</div>
@@ -470,7 +470,7 @@ export default function Home() {
       <footer style={{ background: '#080f0e', padding: '40px 24px' }}>
         <div style={{ maxWidth: 960, margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 24 }}>
-            <Image src="/logo.svg" alt="Capsule" width={22} height={22} />
+            <Image src="/logo.png" alt="Capsule" width={22} height={22} />
             <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 900, fontSize: 14, color: T, letterSpacing: 2.5 }}>CAPSULE</span>
           </div>
           <div className="footer-links" style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
