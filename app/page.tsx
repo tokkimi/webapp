@@ -95,8 +95,7 @@ export default function Home() {
       }}>
         <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 24px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <Image src="/logo.png" alt="Capsule" width={32} height={32} />
-            <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 900, fontSize: 18, letterSpacing: 3, color: scrolled ? T : 'white' }}>CAPSULE</span>
+            <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 900, fontSize: 20, letterSpacing: 4, color: scrolled ? T : 'white' }}>CAPSULE</span>
           </Link>
 
           <div className="desktop-nav" style={{ display: 'flex', gap: 28 }}>
@@ -136,9 +135,17 @@ export default function Home() {
       {/* ══════════════ HERO ══════════════ */}
       <section style={{
         minHeight: '100svh', display: 'flex', alignItems: 'center',
-        background: 'linear-gradient(150deg, #082827 0%, #0c3532 45%, #0f3d3a 100%)',
+        background: '#082827',
         position: 'relative', overflow: 'hidden',
       }}>
+        {/* Photo background */}
+        <div style={{
+          position: 'absolute', inset: 0, zIndex: 0,
+          backgroundImage: `url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1400&q=80&auto=format&fit=crop')`,
+          backgroundSize: 'cover', backgroundPosition: 'center top',
+          opacity: 0.18,
+        }}/>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0, background: 'linear-gradient(150deg, rgba(8,40,39,.97) 0%, rgba(12,53,50,.88) 45%, rgba(15,61,58,.82) 100%)' }}/>
         {/* Ambient blobs */}
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
           <div style={{ position: 'absolute', top: '8%', right: '6%', width: 420, height: 420, borderRadius: '50%', background: `radial-gradient(circle, rgba(48,180,167,.14) 0%, transparent 70%)` }}/>

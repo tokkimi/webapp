@@ -50,8 +50,7 @@ export default function Dons() {
       {/* Nav */}
       <nav style={{ background: 'white', borderBottom: '1px solid #e8f5f4', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <Image src="/logo.png" alt="Capsule" width={32} height={32} style={{ objectFit: 'contain' }} />
-          <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 900, fontSize: 16, color: T, letterSpacing: 2 }}>CAPSULE</span>
+          <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 900, fontSize: 18, color: T, letterSpacing: 4 }}>CAPSULE</span>
         </Link>
         <Link href="/" style={{ fontSize: 13, color: '#888', textDecoration: 'none' }}>← Retour</Link>
       </nav>

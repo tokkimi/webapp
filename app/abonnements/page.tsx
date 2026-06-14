@@ -1,6 +1,5 @@
 'use client'
 import Link from 'next/link'
-import Image from 'next/image'
 
 const T = '#30B4A7'
 
@@ -68,13 +67,12 @@ const PRO_PLANS = [
 export default function Abonnements() {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: '#111', minHeight: '100vh', background: 'white' }}>
-      <style>{`*{box-sizing:border-box;margin:0;padding:0}`}</style>
+      <style>{`*{box-sizing:border-box;margin:0;padding:0}@media(max-width:640px){.pro-plan-grid{grid-template-columns:1fr!important}.pro-features-grid{grid-template-columns:1fr!important}}`}</style>
 
       {/* Nav */}
       <nav style={{ borderBottom: '1px solid #e8f5f4', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'white', zIndex: 50 }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <Image src="/logo.png" alt="Capsule" width={28} height={28} />
-          <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 900, fontSize: 16, color: T, letterSpacing: 2.5 }}>CAPSULE</span>
+          <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 900, fontSize: 18, color: T, letterSpacing: 4 }}>CAPSULE</span>
         </Link>
         <Link href="/auth" style={{ padding: '8px 20px', borderRadius: 100, background: T, color: 'white', textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>Connexion</Link>
       </nav>
@@ -140,7 +138,7 @@ export default function Abonnements() {
         {/* Pro */}
         <h2 style={{ fontSize: 13, fontWeight: 700, color: '#888', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 24 }}>Pour les professionnels</h2>
         {PRO_PLANS.map(plan => (
-          <div key={plan.name} style={{ borderRadius: 24, padding: '36px 40px', background: '#f8fcfb', border: '1px solid #daeeed', display: 'grid', gridTemplateColumns: '1fr auto', gap: 32, alignItems: 'center' }}>
+          <div key={plan.name} className="pro-plan-grid" style={{ borderRadius: 24, padding: '36px 40px', background: '#f8fcfb', border: '1px solid #daeeed', display: 'grid', gridTemplateColumns: '1fr auto', gap: 32, alignItems: 'center' }}>
             <div>
               <div style={{ fontSize: 14, fontWeight: 600, color: '#777', marginBottom: 8 }}>{plan.name}</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
@@ -149,7 +147,7 @@ export default function Abonnements() {
               </div>
               <p style={{ fontSize: 12, color: '#bbb', marginBottom: 16 }}>{plan.note}</p>
               <p style={{ fontSize: 14, color: '#666', marginBottom: 24, lineHeight: 1.6 }}>{plan.desc}</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+              <div className="pro-features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
                 {plan.features.map(f => (
                   <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#444' }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={T} strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
