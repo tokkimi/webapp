@@ -55,7 +55,7 @@ export default function Home() {
   return (
     <div style={{ fontFamily: "'Inter', system-ui, sans-serif", color: '#111' }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800;900&family=Chakra+Petch:wght@700&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
         .nav-link{text-decoration:none;font-size:13.5px;font-weight:500;transition:color .15s}
         .nav-link:hover{color:${T}!important}
@@ -94,8 +94,8 @@ export default function Home() {
         transition: 'background .25s,border .25s',
       }}>
         <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 24px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <span style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 900, fontSize: 20, letterSpacing: 4, color: scrolled ? T : 'white' }}>CAPSULE</span>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <Image src="/logo.png" alt="Capsule" width={36} height={36} style={{ objectFit: 'contain' }} />
           </Link>
 
           <div className="desktop-nav" style={{ display: 'flex', gap: 28 }}>
@@ -165,7 +165,7 @@ export default function Home() {
                 <span style={{ fontSize: 11, fontWeight: 700, color: T, letterSpacing: 1.5, textTransform: 'uppercase' }}>Bien-être & Santé mentale</span>
               </div>
 
-              <h1 style={{ fontFamily: "'Outfit',sans-serif", fontSize: 'clamp(64px,9vw,108px)', fontWeight: 900, lineHeight: .95, letterSpacing: 8, color: 'white', marginBottom: 20 }}>CAPSULE</h1>
+              <h1 style={{ fontFamily: "'Chakra Petch', sans-serif", fontSize: 'clamp(56px,8vw,100px)', fontWeight: 700, lineHeight: .95, letterSpacing: 6, color: T, marginBottom: 20 }}>CAPSULE</h1>
 
               <h2 style={{ fontSize: 'clamp(26px,4vw,44px)', fontWeight: 700, color: 'white', marginBottom: 18, lineHeight: 1.15 }}>
                 c&apos;est quoi ?
