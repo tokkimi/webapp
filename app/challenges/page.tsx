@@ -4,6 +4,8 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import Image from 'next/image'
 import BottomNav from '@/components/BottomNav'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -11,7 +13,7 @@ import BottomNav from '@/components/BottomNav'
 type Category = 'santé' | 'école' | 'social' | 'bien-être' | 'créativité'
 
 interface CheckIn {
-  date: string // ISO date string YYYY-MM-DD
+  date: string
 }
 
 interface Challenge {
@@ -30,18 +32,21 @@ interface Challenge {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const CATEGORY_META: Record<Category, { label: string; emoji: string; color: string; bg: string; border: string }> = {
-  'santé':      { label: 'Santé',      emoji: '💪', color: '#EC4899', bg: 'rgba(236,72,153,0.12)', border: 'rgba(236,72,153,0.35)' },
-  'école':      { label: 'École',      emoji: '📚', color: '#7C3AED', bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.35)' },
-  'social':     { label: 'Social',     emoji: '🤝', color: '#F97316', bg: 'rgba(249,115,22,0.12)', border: 'rgba(249,115,22,0.35)' },
-  'bien-être':  { label: 'Bien-être',  emoji: '🧘', color: '#0D9488', bg: 'rgba(13,148,136,0.12)', border: 'rgba(13,148,136,0.35)' },
-  'créativité': { label: 'Créativité', emoji: '🎨', color: '#2563EB', bg: 'rgba(37,99,235,0.12)',  border: 'rgba(37,99,235,0.35)'  },
+const T = '#30B4A7'
+const DARK = '#082827'
+
+const CATEGORY_META: Record<Category, { label: string; color: string; bg: string; border: string }> = {
+  'santé':      { label: 'Santé',      color: T,        bg: '#f0fafa', border: '#daeeed' },
+  'école':      { label: 'École',      color: '#0c3532', bg: '#f0fafa', border: '#daeeed' },
+  'social':     { label: 'Social',     color: T,        bg: '#f0fafa', border: '#daeeed' },
+  'bien-être':  { label: 'Bien-être',  color: T,        bg: '#f0fafa', border: '#daeeed' },
+  'créativité': { label: 'Créativité', color: '#0c3532', bg: '#f0fafa', border: '#daeeed' },
 }
 
 const SUGGESTIONS = [
   { title: 'Écrire dans ton journal 3 fois cette semaine', category: 'bien-être' as Category, description: 'Prends 10 minutes chaque session pour noter tes pensées et émotions.' },
-  { title: '5 minutes de respiration par jour',           category: 'santé'     as Category, description: 'Une pause respiratoire quotidienne pour calmer ton esprit et recharger ton énergie.' },
-  { title: 'Appeler un ami cette semaine',                category: 'social'    as Category, description: 'Prends des nouvelles d\'un ami ou d\'un proche que tu n\'as pas contacté récemment.' },
+  { title: '5 minutes de respiration par jour',            category: 'santé'     as Category, description: 'Une pause respiratoire quotidienne pour calmer ton esprit et recharger ton énergie.' },
+  { title: 'Appeler un ami cette semaine',                 category: 'social'    as Category, description: "Prends des nouvelles d'un ami ou d'un proche que tu n'as pas contacté récemment." },
 ]
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -53,7 +58,7 @@ function daysUntil(dateStr: string): number {
 
 function currentWeekDates(): string[] {
   const now = new Date()
-  const day = now.getDay() === 0 ? 6 : now.getDay() - 1 // Mon=0
+  const day = now.getDay() === 0 ? 6 : now.getDay() - 1
   const monday = new Date(now)
   monday.setDate(now.getDate() - day)
   return Array.from({ length: 7 }, (_, i) => {
@@ -79,9 +84,7 @@ function currentStreak(checkIns: CheckIn[]): number {
       const prev = new Date(cursor)
       prev.setDate(prev.getDate() - 1)
       cursor = prev.toISOString().slice(0, 10)
-    } else {
-      break
-    }
+    } else break
   }
   return streak
 }
@@ -90,26 +93,9 @@ function hasCheckedInToday(checkIns: CheckIn[]): boolean {
   return checkIns.some(c => c.date === today())
 }
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
-
-function Skeleton({ w = '100%', h = 20, radius = 8 }: { w?: string; h?: number; radius?: number }) {
-  return (
-    <div style={{
-      width: w, height: h, borderRadius: radius,
-      background: 'linear-gradient(90deg, rgba(124,58,237,0.08) 0%, rgba(236,72,153,0.12) 50%, rgba(124,58,237,0.08) 100%)',
-      backgroundSize: '200% 100%',
-      animation: 'shimmer 1.6s infinite linear',
-    }} />
-  )
-}
-
 // ─── Challenge Card ────────────────────────────────────────────────────────────
 
-function ChallengeCard({
-  challenge,
-  onCheckIn,
-  onDelete,
-}: {
+function ChallengeCard({ challenge, onCheckIn, onDelete }: {
   challenge: Challenge
   onCheckIn: (id: string) => Promise<void>
   onDelete: (id: string) => Promise<void>
@@ -123,163 +109,99 @@ function ChallengeCard({
   const daysLeft = challenge.target_date ? daysUntil(challenge.target_date) : null
 
   return (
-    <div style={{
-      background: 'rgba(255,255,255,0.07)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      border: `1px solid ${meta.border}`,
-      borderRadius: 20,
-      padding: '20px 22px',
-      boxShadow: `0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.12)`,
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
-      {/* Gradient accent bar */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-        background: `linear-gradient(90deg, ${meta.color}, transparent)`,
-        borderRadius: '20px 20px 0 0',
-      }} />
-
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
-        <div style={{ flex: 1, marginRight: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-            <span style={{
-              background: meta.bg,
-              border: `1px solid ${meta.border}`,
-              color: meta.color,
-              fontSize: 11, fontWeight: 700, borderRadius: 20,
-              padding: '2px 10px', letterSpacing: '0.04em',
-            }}>
-              {meta.emoji} {meta.label}
-            </span>
-            {checkedToday && (
-              <span style={{
-                background: 'rgba(34,197,94,0.15)',
-                border: '1px solid rgba(34,197,94,0.35)',
-                color: '#22c55e', fontSize: 11, fontWeight: 700,
-                borderRadius: 20, padding: '2px 10px',
-              }}>
-                ✓ Fait aujourd'hui
+    <div style={{ background: '#fff', border: '1px solid #daeeed', borderRadius: 20, overflow: 'hidden', boxShadow: '0 2px 8px rgba(48,180,167,0.06)' }}>
+      <div style={{ height: 4, background: T }} />
+      <div style={{ padding: '18px 20px' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+          <div style={{ flex: 1, marginRight: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+              <span style={{ background: meta.bg, border: `1px solid ${meta.border}`, color: meta.color, fontSize: 11, fontWeight: 700, borderRadius: 100, padding: '2px 10px', letterSpacing: '0.04em' }}>
+                {meta.label}
               </span>
-            )}
+              {checkedToday && (
+                <span style={{ background: '#f0fdf4', border: '1px solid #86efac', color: '#16a34a', fontSize: 11, fontWeight: 700, borderRadius: 100, padding: '2px 10px' }}>
+                  Fait aujourd'hui
+                </span>
+              )}
+            </div>
+            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: DARK, lineHeight: 1.3, fontFamily: 'Outfit,sans-serif' }}>
+              {challenge.title}
+            </h3>
           </div>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1a1a2e', lineHeight: 1.3 }}>
-            {challenge.title}
-          </h3>
+          <button
+            onClick={async () => { setDeleting(true); await onDelete(challenge.id); setDeleting(false) }}
+            disabled={deleting}
+            title="Supprimer"
+            style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#ef4444', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, opacity: deleting ? 0.5 : 1, transition: 'all 0.2s' }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
         </div>
+
+        {challenge.description && (
+          <p style={{ margin: '0 0 14px', fontSize: 13, color: '#6B7280', lineHeight: 1.55 }}>{challenge.description}</p>
+        )}
+
+        {/* Stats row */}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+          <div style={{ background: '#f0fafa', border: '1px solid #daeeed', borderRadius: 10, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={T} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span style={{ fontSize: 12, fontWeight: 700, color: T }}>{streak} jour{streak !== 1 ? 's' : ''} consécutif{streak !== 1 ? 's' : ''}</span>
+          </div>
+          {daysLeft !== null && (
+            <div style={{ background: daysLeft < 3 ? '#fef2f2' : '#f0fafa', border: `1px solid ${daysLeft < 3 ? '#fca5a5' : '#daeeed'}`, borderRadius: 10, padding: '5px 12px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={daysLeft < 3 ? '#ef4444' : T} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span style={{ fontSize: 12, fontWeight: 600, color: daysLeft < 3 ? '#ef4444' : T }}>
+                {daysLeft > 0 ? `J-${daysLeft}` : daysLeft === 0 ? "Aujourd'hui !" : 'Terminé'}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Weekly progress */}
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+            <span style={{ fontSize: 12, color: '#6B7280', fontWeight: 600 }}>Cette semaine</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: T }}>{weekly}/7 jours</span>
+          </div>
+          <div style={{ height: 7, background: '#f0fafa', borderRadius: 99, overflow: 'hidden', border: '1px solid #daeeed' }}>
+            <div style={{ height: '100%', width: `${(weekly / 7) * 100}%`, background: T, borderRadius: 99, transition: 'width 0.6s ease' }} />
+          </div>
+          <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
+            {currentWeekDates().map((d) => {
+              const done = challenge.check_ins.some(c => c.date === d)
+              const isToday = d === today()
+              return (
+                <div key={d} title={d} style={{ flex: 1, height: 5, borderRadius: 99, background: done ? T : isToday ? `${T}40` : '#e5e7eb', border: isToday ? `1.5px solid ${T}80` : 'none', transition: 'background 0.3s' }} />
+              )
+            })}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
+            {['L','M','M','J','V','S','D'].map((d, i) => (
+              <span key={i} style={{ flex: 1, textAlign: 'center', fontSize: 9, color: '#9CA3AF', fontWeight: 600 }}>{d}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Check-in button */}
         <button
-          onClick={async () => { setDeleting(true); await onDelete(challenge.id); setDeleting(false) }}
-          disabled={deleting}
-          style={{
-            background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
-            color: '#ef4444', borderRadius: 10, width: 32, height: 32,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', fontSize: 14, flexShrink: 0,
-            opacity: deleting ? 0.5 : 1, transition: 'all 0.2s',
-          }}
-          title="Supprimer"
+          onClick={async () => { setLoading(true); await onCheckIn(challenge.id); setLoading(false) }}
+          disabled={checkedToday || loading}
+          style={{ width: '100%', padding: '11px', borderRadius: 100, border: 'none', cursor: checkedToday ? 'default' : 'pointer', background: checkedToday ? '#f0fdf4' : T, color: checkedToday ? '#16a34a' : '#fff', fontWeight: 700, fontSize: 14, boxShadow: checkedToday ? 'none' : `0 4px 14px ${T}40`, transition: 'all 0.25s', opacity: loading ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'Inter,sans-serif' }}
         >
-          🗑
+          {loading ? (
+            <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+          ) : checkedToday ? (
+            <>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Déjà coché aujourd'hui
+            </>
+          ) : (
+            <>Marquer aujourd'hui</>
+          )}
         </button>
       </div>
-
-      {/* Description */}
-      {challenge.description && (
-        <p style={{ margin: '0 0 14px', fontSize: 13.5, color: '#4a4a6a', lineHeight: 1.55 }}>
-          {challenge.description}
-        </p>
-      )}
-
-      {/* Stats row */}
-      <div style={{ display: 'flex', gap: 16, marginBottom: 14, flexWrap: 'wrap' }}>
-        <div style={{
-          background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)',
-          borderRadius: 12, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6,
-        }}>
-          <span style={{ fontSize: 16 }}>🔥</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#F97316' }}>
-            {streak} jour{streak !== 1 ? 's' : ''} consécutif{streak !== 1 ? 's' : ''}
-          </span>
-        </div>
-        {daysLeft !== null && (
-          <div style={{
-            background: daysLeft < 3 ? 'rgba(239,68,68,0.1)' : 'rgba(124,58,237,0.1)',
-            border: `1px solid ${daysLeft < 3 ? 'rgba(239,68,68,0.25)' : 'rgba(124,58,237,0.25)'}`,
-            borderRadius: 12, padding: '6px 14px', display: 'flex', alignItems: 'center', gap: 6,
-          }}>
-            <span style={{ fontSize: 14 }}>📅</span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: daysLeft < 3 ? '#ef4444' : '#7C3AED' }}>
-              {daysLeft > 0 ? `J-${daysLeft}` : daysLeft === 0 ? "Aujourd'hui !" : 'Terminé'}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Weekly progress bar */}
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-          <span style={{ fontSize: 12, color: '#6b6b8a', fontWeight: 600 }}>Cette semaine</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: meta.color }}>{weekly}/7 jours</span>
-        </div>
-        <div style={{ height: 8, background: 'rgba(0,0,0,0.07)', borderRadius: 99, overflow: 'hidden' }}>
-          <div style={{
-            height: '100%',
-            width: `${(weekly / 7) * 100}%`,
-            background: `linear-gradient(90deg, ${meta.color}, ${meta.color}cc)`,
-            borderRadius: 99,
-            transition: 'width 0.6s cubic-bezier(0.34,1.56,0.64,1)',
-          }} />
-        </div>
-        {/* Day dots */}
-        <div style={{ display: 'flex', gap: 4, marginTop: 6 }}>
-          {currentWeekDates().map((d, i) => {
-            const done = challenge.check_ins.some(c => c.date === d)
-            const isToday = d === today()
-            return (
-              <div key={d} title={d} style={{
-                flex: 1, height: 6, borderRadius: 99,
-                background: done ? meta.color : isToday ? `${meta.color}40` : 'rgba(0,0,0,0.08)',
-                border: isToday ? `1.5px solid ${meta.color}80` : 'none',
-                transition: 'background 0.3s',
-              }} />
-            )
-          })}
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
-          {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
-            <span key={i} style={{ flex: 1, textAlign: 'center', fontSize: 9, color: '#9494b8', fontWeight: 600 }}>{d}</span>
-          ))}
-        </div>
-      </div>
-
-      {/* Check-in button */}
-      <button
-        onClick={async () => { setLoading(true); await onCheckIn(challenge.id); setLoading(false) }}
-        disabled={checkedToday || loading}
-        style={{
-          width: '100%', padding: '12px', borderRadius: 14,
-          border: 'none', cursor: checkedToday ? 'default' : 'pointer',
-          background: checkedToday
-            ? 'rgba(34,197,94,0.12)'
-            : `linear-gradient(135deg, ${meta.color}, ${meta.color}cc)`,
-          color: checkedToday ? '#22c55e' : '#fff',
-          fontWeight: 700, fontSize: 14, letterSpacing: '0.02em',
-          boxShadow: checkedToday ? 'none' : `0 4px 16px ${meta.color}40`,
-          transition: 'all 0.25s',
-          opacity: loading ? 0.7 : 1,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        }}
-      >
-        {loading ? (
-          <span style={{ display: 'inline-block', animation: 'spin 0.8s linear infinite' }}>⏳</span>
-        ) : checkedToday ? (
-          '✅ Déjà coché aujourd\'hui !'
-        ) : (
-          <>Marquer aujourd'hui <span>✓</span></>
-        )}
-      </button>
     </div>
   )
 }
@@ -293,47 +215,17 @@ function CompletedCard({ challenge }: { challenge: Challenge }) {
     : null
 
   return (
-    <div style={{
-      background: 'rgba(255,255,255,0.06)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      border: `1px solid rgba(255,215,0,0.25)`,
-      borderRadius: 18,
-      padding: '18px 20px',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.07), inset 0 1px 0 rgba(255,215,0,0.15)',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-        background: 'linear-gradient(90deg, #ffd700, #f59e0b, #ffd700)',
-      }} />
-      <div style={{ fontSize: 28, marginBottom: 8 }}>🏆</div>
-      <div style={{
-        display: 'inline-flex', alignItems: 'center', gap: 6,
-        background: meta.bg, border: `1px solid ${meta.border}`,
-        color: meta.color, fontSize: 11, fontWeight: 700,
-        borderRadius: 20, padding: '2px 10px', marginBottom: 8,
-      }}>
-        {meta.emoji} {meta.label}
+    <div style={{ background: '#fff', border: '1px solid #daeeed', borderRadius: 18, padding: '18px 20px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: '#f59e0b' }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span style={{ background: meta.bg, border: `1px solid ${meta.border}`, color: meta.color, fontSize: 11, fontWeight: 700, borderRadius: 100, padding: '2px 10px' }}>{meta.label}</span>
       </div>
-      <h4 style={{ margin: '0 0 6px', fontSize: 14, fontWeight: 700, color: '#1a1a2e', lineHeight: 1.35 }}>
-        {challenge.title}
-      </h4>
-      {completedDate && (
-        <p style={{ margin: '0 0 8px', fontSize: 12, color: '#6b6b8a' }}>
-          Accompli le {completedDate}
-        </p>
-      )}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        background: 'rgba(249,115,22,0.1)', borderRadius: 10, padding: '4px 10px',
-        width: 'fit-content',
-      }}>
-        <span style={{ fontSize: 14 }}>🔥</span>
-        <span style={{ fontSize: 12, fontWeight: 700, color: '#F97316' }}>
-          {challenge.total_streak} jours au total
-        </span>
+      <h4 style={{ margin: '0 0 6px', fontSize: 14, fontWeight: 700, color: DARK, lineHeight: 1.35, fontFamily: 'Outfit,sans-serif' }}>{challenge.title}</h4>
+      {completedDate && <p style={{ margin: '0 0 8px', fontSize: 12, color: '#6B7280' }}>Accompli le {completedDate}</p>}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#f0fafa', borderRadius: 8, padding: '4px 10px', width: 'fit-content' }}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={T} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span style={{ fontSize: 12, fontWeight: 700, color: T }}>{challenge.total_streak} jours au total</span>
       </div>
     </div>
   )
@@ -341,55 +233,22 @@ function CompletedCard({ challenge }: { challenge: Challenge }) {
 
 // ─── Suggestion Card ──────────────────────────────────────────────────────────
 
-function SuggestionCard({
-  suggestion,
-  onAdd,
-}: {
-  suggestion: typeof SUGGESTIONS[0]
-  onAdd: (s: typeof SUGGESTIONS[0]) => Promise<void>
-}) {
+function SuggestionCard({ suggestion, onAdd }: { suggestion: typeof SUGGESTIONS[0]; onAdd: (s: typeof SUGGESTIONS[0]) => Promise<void> }) {
   const meta = CATEGORY_META[suggestion.category]
   const [loading, setLoading] = useState(false)
   const [added, setAdded] = useState(false)
 
   return (
-    <div style={{
-      background: 'rgba(255,255,255,0.06)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      border: `1px solid rgba(124,58,237,0.2)`,
-      borderRadius: 18,
-      padding: '18px 20px',
-      boxShadow: '0 4px 20px rgba(124,58,237,0.06)',
-    }}>
-      <div style={{
-        display: 'inline-flex', alignItems: 'center', gap: 6,
-        background: meta.bg, border: `1px solid ${meta.border}`,
-        color: meta.color, fontSize: 11, fontWeight: 700,
-        borderRadius: 20, padding: '2px 10px', marginBottom: 10,
-      }}>
-        {meta.emoji} {meta.label}
-      </div>
-      <p style={{ margin: '0 0 14px', fontSize: 13.5, fontWeight: 600, color: '#1a1a2e', lineHeight: 1.5 }}>
-        {suggestion.title}
-      </p>
-      <p style={{ margin: '0 0 16px', fontSize: 12.5, color: '#6b6b8a', lineHeight: 1.5 }}>
-        {suggestion.description}
-      </p>
+    <div style={{ background: '#fff', border: '1px solid #daeeed', borderRadius: 18, padding: '18px 20px' }}>
+      <span style={{ background: meta.bg, border: `1px solid ${meta.border}`, color: meta.color, fontSize: 11, fontWeight: 700, borderRadius: 100, padding: '2px 10px', display: 'inline-block', marginBottom: 10 }}>{meta.label}</span>
+      <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 600, color: DARK, lineHeight: 1.5, fontFamily: 'Outfit,sans-serif' }}>{suggestion.title}</p>
+      <p style={{ margin: '0 0 14px', fontSize: 12, color: '#6B7280', lineHeight: 1.5 }}>{suggestion.description}</p>
       <button
         onClick={async () => { setLoading(true); await onAdd(suggestion); setAdded(true); setLoading(false) }}
         disabled={loading || added}
-        style={{
-          width: '100%', padding: '10px', borderRadius: 12,
-          border: added ? '1px solid rgba(34,197,94,0.35)' : `1px solid ${meta.border}`,
-          cursor: added ? 'default' : 'pointer',
-          background: added ? 'rgba(34,197,94,0.1)' : meta.bg,
-          color: added ? '#22c55e' : meta.color,
-          fontWeight: 700, fontSize: 13, transition: 'all 0.25s',
-          opacity: loading ? 0.7 : 1,
-        }}
+        style={{ width: '100%', padding: '9px', borderRadius: 100, border: added ? '1px solid #86efac' : `1px solid ${T}`, cursor: added ? 'default' : 'pointer', background: added ? '#f0fdf4' : T, color: added ? '#16a34a' : '#fff', fontWeight: 700, fontSize: 13, transition: 'all 0.25s', opacity: loading ? 0.7 : 1, fontFamily: 'Inter,sans-serif' }}
       >
-        {added ? '✓ Ajouté !' : loading ? 'Ajout...' : '+ Ajouter ce défi'}
+        {added ? 'Ajouté !' : loading ? 'Ajout...' : '+ Ajouter ce défi'}
       </button>
     </div>
   )
@@ -407,14 +266,14 @@ export default function ChallengesPage() {
   const [showForm, setShowForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [dbUnavailable, setDbUnavailable] = useState(false)
 
-  // Form state
   const [formTitle, setFormTitle] = useState('')
   const [formDesc, setFormDesc] = useState('')
   const [formCategory, setFormCategory] = useState<Category>('bien-être')
   const [formDate, setFormDate] = useState('')
 
-  useEffect(() => { init() }, [])
+  useEffect(() => { init() }, []) // eslint-disable-line
 
   async function init() {
     const { data: { user } } = await supabase.auth.getUser()
@@ -427,11 +286,18 @@ export default function ChallengesPage() {
   async function fetchChallenges() {
     try {
       const res = await fetch('/api/challenges')
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        if (res.status === 500 || body?.code === '42P01') {
+          setDbUnavailable(true)
+          return
+        }
+        throw new Error()
+      }
       const data = await res.json()
       setChallenges(Array.isArray(data) ? data : data.challenges ?? [])
     } catch {
-      setError('Impossible de charger tes défis.')
+      setError('Impossible de charger tes défis. Vérifie ta connexion.')
     }
   }
 
@@ -444,14 +310,17 @@ export default function ChallengesPage() {
       const res = await fetch('/api/challenges', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: formTitle.trim(),
-          description: formDesc.trim(),
-          category: formCategory,
-          target_date: formDate || null,
-        }),
+        body: JSON.stringify({ title: formTitle.trim(), description: formDesc.trim(), category: formCategory, target_date: formDate || null }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        if (res.status === 500 || body?.code === '42P01') {
+          setDbUnavailable(true)
+          setShowForm(false)
+          return
+        }
+        throw new Error(body?.message || 'Erreur serveur')
+      }
       const created = await res.json()
       const newChallenge: Challenge = {
         id: created.id,
@@ -469,8 +338,8 @@ export default function ChallengesPage() {
       setChallenges(prev => [newChallenge, ...prev])
       setFormTitle(''); setFormDesc(''); setFormCategory('bien-être'); setFormDate('')
       setShowForm(false)
-    } catch {
-      setError('Erreur lors de la création du défi.')
+    } catch (err: any) {
+      setError(err?.message || 'Erreur lors de la création du défi. Réessaie dans quelques instants.')
     } finally {
       setSubmitting(false)
     }
@@ -482,8 +351,7 @@ export default function ChallengesPage() {
       if (!res.ok) throw new Error()
       setChallenges(prev => prev.map(c => {
         if (c.id !== id) return c
-        const newCheckIn: CheckIn = { date: today() }
-        return { ...c, check_ins: [...c.check_ins, newCheckIn] }
+        return { ...c, check_ins: [...c.check_ins, { date: today() }] }
       }))
     } catch {
       setError('Erreur lors du check-in.')
@@ -505,14 +373,13 @@ export default function ChallengesPage() {
       const res = await fetch('/api/challenges', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: s.title,
-          description: s.description,
-          category: s.category,
-          target_date: null,
-        }),
+        body: JSON.stringify({ title: s.title, description: s.description, category: s.category, target_date: null }),
       })
-      if (!res.ok) throw new Error()
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        if (res.status === 500 || body?.code === '42P01') { setDbUnavailable(true); return }
+        throw new Error()
+      }
       const created = await res.json()
       const newChallenge: Challenge = {
         id: created.id,
@@ -529,392 +396,194 @@ export default function ChallengesPage() {
       }
       setChallenges(prev => [newChallenge, ...prev])
     } catch {
-      setError('Erreur lors de l\'ajout.')
+      setError("Erreur lors de l'ajout.")
     }
   }
 
   const active = challenges.filter(c => !c.completed)
   const done = challenges.filter(c => c.completed)
 
-  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <>
       <style>{`
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
         @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideDown {
-          from { opacity: 0; max-height: 0; transform: translateY(-8px); }
-          to   { opacity: 1; max-height: 1000px; transform: translateY(0); }
-        }
-        .challenge-card { animation: fadeUp 0.4s ease both; }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes slideDown { from{opacity:0;max-height:0} to{opacity:1;max-height:1200px} }
+        .ch-card { animation: fadeUp 0.4s ease both; }
         * { box-sizing: border-box; }
-        input, textarea, select {
-          font-family: inherit;
-          outline: none;
-          transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        input:focus, textarea:focus, select:focus {
-          border-color: rgba(124,58,237,0.6) !important;
-          box-shadow: 0 0 0 3px rgba(124,58,237,0.12) !important;
-        }
+        input,textarea,select { font-family: Inter,Outfit,sans-serif; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+        input:focus, textarea:focus, select:focus { border-color: ${T} !important; box-shadow: 0 0 0 3px ${T}20 !important; }
         button:active { transform: scale(0.97); }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.25); border-radius: 99px; }
+        @media(max-width:640px){
+          .ch-main { padding: 16px 12px 100px !important; }
+          .ch-header { flex-direction: column !important; align-items: flex-start !important; }
+          .ch-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
 
-      <div style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #F8F7FF 0%, #f0eeff 40%, #fce7f3 80%, #fff7ed 100%)',
-        fontFamily: "'Outfit', 'Inter', sans-serif",
-        paddingBottom: 100,
-      }}>
+      <div style={{ minHeight: '100vh', background: '#f5fafa', fontFamily: 'Inter,Outfit,sans-serif', paddingBottom: 80 }}>
 
-        {/* ── Sidebar (desktop) + Main ────────────────────────────────────── */}
-        <div style={{ display: 'flex', maxWidth: 1200, margin: '0 auto' }}>
+        {/* Nav */}
+        <nav style={{ position: 'sticky', top: 0, zIndex: 50, background: 'rgba(245,250,250,0.96)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #daeeed', padding: '0 20px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+              <Image src="/logo.png" width={34} height={34} alt="Capsule" style={{ borderRadius: 8 }} />
+            </Link>
+            <Link href="/dashboard/ado" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', color: T, fontWeight: 600, fontSize: 14 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              Retour
+            </Link>
+          </div>
+          <span style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: 16, color: DARK }}>Mes Défis</span>
+          <div style={{ width: 80 }} />
+        </nav>
 
-          {/* Sidebar */}
-          <aside style={{
-            width: 240, minHeight: '100vh', padding: '32px 16px',
-            display: 'none',
-            flexDirection: 'column', gap: 6,
-          }} className="sidebar-desktop">
-            <div style={{
-              fontWeight: 800, fontSize: 20, color: '#7C3AED',
-              marginBottom: 28, paddingLeft: 12,
-              background: 'linear-gradient(90deg, #7C3AED, #EC4899)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            }}>
-              ✨ Capsule Ado
+        <main className="ch-main" style={{ maxWidth: 760, margin: '0 auto', padding: '24px 16px 100px' }}>
+
+          {/* Header */}
+          <div className="ch-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <h1 style={{ margin: 0, fontSize: 26, fontWeight: 800, color: DARK, fontFamily: 'Outfit,sans-serif', lineHeight: 1.2 }}>Mes Défis</h1>
+              <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>
+                {active.length} défi{active.length !== 1 ? 's' : ''} en cours · {done.length} accompli{done.length !== 1 ? 's' : ''}
+              </p>
             </div>
-            {[
-              { href: '/dashboard/ado', label: '🏠 Accueil', active: false },
-              { href: '/chat',          label: '💬 Chat IA',  active: false },
-              { href: '/journal',       label: '📔 Journal',  active: false },
-              { href: '/challenges',    label: '🎯 Défis',    active: true  },
-              { href: '/motivation',    label: '⚡ Motivation',active: false },
-              { href: '/profile',       label: '👤 Profil',   active: false },
-            ].map(item => (
-              <a key={item.href} href={item.href} style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: '10px 14px', borderRadius: 14,
-                textDecoration: 'none', fontSize: 14, fontWeight: 600,
-                background: item.active ? 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(236,72,153,0.1))' : 'transparent',
-                color: item.active ? '#7C3AED' : '#4a4a6a',
-                border: item.active ? '1px solid rgba(124,58,237,0.25)' : '1px solid transparent',
-                transition: 'all 0.2s',
-              }}>
-                {item.label}
-              </a>
-            ))}
-          </aside>
+            <button
+              onClick={() => setShowForm(v => !v)}
+              style={{ padding: '10px 20px', borderRadius: 100, cursor: 'pointer', fontWeight: 700, fontSize: 14, background: showForm ? '#f0fafa' : T, color: showForm ? T : '#fff', boxShadow: showForm ? 'none' : `0 4px 14px ${T}40`, border: showForm ? `1px solid ${T}` : 'none', transition: 'all 0.25s', fontFamily: 'Inter,sans-serif' }}
+            >
+              {showForm ? '✕ Annuler' : '+ Nouveau défi'}
+            </button>
+          </div>
 
-          {/* Main content */}
-          <main style={{ flex: 1, padding: '24px 16px', maxWidth: 760, margin: '0 auto' }}>
-
-            {/* ── Header ──────────────────────────────────────────────────── */}
-            <div style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              marginBottom: 28, flexWrap: 'wrap', gap: 12,
-            }}>
-              <div>
-                <h1 style={{
-                  margin: 0, fontSize: 30, fontWeight: 800,
-                  background: 'linear-gradient(135deg, #7C3AED, #EC4899, #F97316)',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                  lineHeight: 1.2,
-                }}>
-                  Mes Défis 🎯
-                </h1>
-                <p style={{ margin: '6px 0 0', fontSize: 14, color: '#6b6b8a' }}>
-                  {active.length} défi{active.length !== 1 ? 's' : ''} en cours · {done.length} accompli{done.length !== 1 ? 's' : ''}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowForm(v => !v)}
-                style={{
-                  padding: '11px 22px', borderRadius: 16,
-                  cursor: 'pointer', fontWeight: 700, fontSize: 14,
-                  background: showForm
-                    ? 'rgba(20,184,166,0.1)'
-                    : 'linear-gradient(135deg, rgb(20,184,166), rgb(0,173,239))',
-                  color: showForm ? 'rgb(20,184,166)' : '#fff',
-                  boxShadow: showForm ? 'none' : '0 4px 20px rgba(20,184,166,0.35)',
-                  border: showForm ? '1px solid rgba(20,184,166,0.3)' : 'none',
-                  transition: 'all 0.25s',
-                  display: 'flex', alignItems: 'center', gap: 8,
-                }}
-              >
-                {showForm ? '✕ Annuler' : '+ Ajouter un défi'}
-              </button>
+          {/* DB unavailable banner */}
+          {dbUnavailable && (
+            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 14, padding: '14px 18px', marginBottom: 20 }}>
+              <p style={{ margin: 0, fontSize: 14, color: '#92400e', fontWeight: 600 }}>Base de données indisponible</p>
+              <p style={{ margin: '4px 0 0', fontSize: 13, color: '#92400e' }}>
+                La fonctionnalité défis n'est pas encore disponible. Le formulaire reste accessible mais les données ne seront pas sauvegardées. Réessaie plus tard.
+              </p>
             </div>
+          )}
 
-            {/* Error banner */}
-            {error && (
-              <div style={{
-                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)',
-                color: '#ef4444', borderRadius: 14, padding: '12px 16px',
-                marginBottom: 20, fontSize: 13.5, fontWeight: 500,
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              }}>
-                <span>⚠️ {error}</span>
-                <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 16 }}>×</button>
-              </div>
-            )}
+          {/* Error banner */}
+          {error && (
+            <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', borderRadius: 14, padding: '12px 16px', marginBottom: 20, fontSize: 13, fontWeight: 500, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>{error}</span>
+              <button onClick={() => setError(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: 18, lineHeight: 1, padding: '0 0 0 12px' }}>×</button>
+            </div>
+          )}
 
-            {/* ── Create Form ──────────────────────────────────────────────── */}
-            {showForm && (
-              <div style={{
-                background: 'rgba(255,255,255,0.75)',
-                backdropFilter: 'blur(24px)',
-                WebkitBackdropFilter: 'blur(24px)',
-                border: '1px solid rgba(124,58,237,0.25)',
-                borderRadius: 22,
-                padding: '24px',
-                marginBottom: 28,
-                boxShadow: '0 8px 40px rgba(124,58,237,0.1)',
-                animation: 'slideDown 0.35s ease',
-              }}>
-                <h2 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 800, color: '#1a1a2e' }}>
-                  ✨ Nouveau défi
-                </h2>
-                <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-                  {/* Title */}
-                  <div>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 700, color: '#4a4a6a' }}>
-                      Titre du défi *
-                    </label>
-                    <input
-                      value={formTitle}
-                      onChange={e => setFormTitle(e.target.value)}
-                      placeholder="Ex : Faire 10 min de sport chaque matin"
-                      required
-                      style={{
-                        width: '100%', padding: '12px 14px', borderRadius: 12, fontSize: 14,
-                        background: 'rgba(255,255,255,0.8)',
-                        border: '1.5px solid rgba(124,58,237,0.2)',
-                        color: '#1a1a2e',
-                      }}
-                    />
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 700, color: '#4a4a6a' }}>
-                      Description (optionnel)
-                    </label>
-                    <textarea
-                      value={formDesc}
-                      onChange={e => setFormDesc(e.target.value)}
-                      placeholder="Décris ton défi en quelques mots..."
-                      rows={3}
-                      style={{
-                        width: '100%', padding: '12px 14px', borderRadius: 12, fontSize: 14,
-                        background: 'rgba(255,255,255,0.8)',
-                        border: '1.5px solid rgba(124,58,237,0.2)',
-                        color: '#1a1a2e', resize: 'vertical',
-                      }}
-                    />
-                  </div>
-
-                  {/* Category + Date row */}
-                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                    <div style={{ flex: 1, minWidth: 160 }}>
-                      <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 700, color: '#4a4a6a' }}>
-                        Catégorie
-                      </label>
-                      <select
-                        value={formCategory}
-                        onChange={e => setFormCategory(e.target.value as Category)}
-                        style={{
-                          width: '100%', padding: '12px 14px', borderRadius: 12, fontSize: 14,
-                          background: 'rgba(255,255,255,0.8)',
-                          border: '1.5px solid rgba(124,58,237,0.2)',
-                          color: '#1a1a2e', cursor: 'pointer',
-                          appearance: 'none', WebkitAppearance: 'none',
-                        }}
-                      >
-                        {(Object.entries(CATEGORY_META) as [Category, typeof CATEGORY_META[Category]][]).map(([val, meta]) => (
-                          <option key={val} value={val}>{meta.emoji} {meta.label}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div style={{ flex: 1, minWidth: 160 }}>
-                      <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 700, color: '#4a4a6a' }}>
-                        Date cible (optionnel)
-                      </label>
-                      <input
-                        type="date"
-                        value={formDate}
-                        onChange={e => setFormDate(e.target.value)}
-                        min={today()}
-                        style={{
-                          width: '100%', padding: '12px 14px', borderRadius: 12, fontSize: 14,
-                          background: 'rgba(255,255,255,0.8)',
-                          border: '1.5px solid rgba(124,58,237,0.2)',
-                          color: '#1a1a2e', cursor: 'pointer',
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Submit */}
-                  <button
-                    type="submit"
-                    disabled={submitting || !formTitle.trim()}
-                    style={{
-                      padding: '13px', borderRadius: 14, border: 'none',
-                      cursor: submitting || !formTitle.trim() ? 'not-allowed' : 'pointer',
-                      background: 'linear-gradient(135deg, #7C3AED, #EC4899)',
-                      color: '#fff', fontWeight: 800, fontSize: 15,
-                      boxShadow: '0 4px 20px rgba(124,58,237,0.35)',
-                      opacity: submitting || !formTitle.trim() ? 0.6 : 1,
-                      transition: 'all 0.25s',
-                      marginTop: 4,
-                    }}
-                  >
-                    {submitting ? 'Création...' : '🎯 Créer ce défi'}
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* ── Défis en cours ───────────────────────────────────────────── */}
-            <section style={{ marginBottom: 40 }}>
-              <h2 style={{ margin: '0 0 16px', fontSize: 20, fontWeight: 800, color: '#1a1a2e' }}>
-                Défis en cours{active.length > 0 && <span style={{
-                  marginLeft: 10, background: 'linear-gradient(135deg, #7C3AED, #EC4899)',
-                  color: '#fff', fontSize: 13, fontWeight: 700, borderRadius: 20,
-                  padding: '2px 10px',
-                }}>{active.length}</span>}
-              </h2>
-
-              {loading ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {[1, 2].map(i => (
-                    <div key={i} style={{
-                      background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(124,58,237,0.15)',
-                      borderRadius: 20, padding: '20px 22px',
-                      display: 'flex', flexDirection: 'column', gap: 12,
-                    }}>
-                      <Skeleton w="40%" h={18} />
-                      <Skeleton w="70%" h={22} />
-                      <Skeleton w="100%" h={14} />
-                      <Skeleton w="100%" h={8} radius={99} />
-                      <Skeleton w="100%" h={44} radius={14} />
-                    </div>
-                  ))}
+          {/* Create form */}
+          {showForm && (
+            <div style={{ background: '#fff', border: '1px solid #daeeed', borderRadius: 20, padding: '22px', marginBottom: 24, boxShadow: '0 4px 20px rgba(48,180,167,0.08)', animation: 'slideDown 0.3s ease' }}>
+              <h2 style={{ margin: '0 0 18px', fontSize: 17, fontWeight: 800, color: DARK, fontFamily: 'Outfit,sans-serif' }}>Nouveau défi</h2>
+              <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 700, color: '#374151', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Titre du défi *</label>
+                  <input value={formTitle} onChange={e => setFormTitle(e.target.value)} placeholder="Ex : Faire 10 min de sport chaque matin" required
+                    style={{ width: '100%', padding: '11px 14px', borderRadius: 12, fontSize: 14, background: '#f9fffe', border: '1.5px solid #daeeed', color: DARK }} />
                 </div>
-              ) : active.length === 0 ? (
-                <div style={{
-                  background: 'rgba(255,255,255,0.06)',
-                  border: '1px dashed rgba(124,58,237,0.25)',
-                  borderRadius: 20, padding: '40px 24px', textAlign: 'center',
-                }}>
-                  <div style={{ fontSize: 48, marginBottom: 12 }}>🎯</div>
-                  <p style={{ margin: 0, fontSize: 15, color: '#6b6b8a', fontWeight: 500 }}>
-                    Aucun défi en cours.<br />
-                    <span style={{ color: '#7C3AED', fontWeight: 700 }}>Lance ton premier défi !</span>
-                  </p>
+                <div>
+                  <label style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 700, color: '#374151', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Description (optionnel)</label>
+                  <textarea value={formDesc} onChange={e => setFormDesc(e.target.value)} placeholder="Décris ton défi en quelques mots..." rows={3}
+                    style={{ width: '100%', padding: '11px 14px', borderRadius: 12, fontSize: 14, background: '#f9fffe', border: '1.5px solid #daeeed', color: DARK, resize: 'vertical' }} />
+                </div>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, minWidth: 150 }}>
+                    <label style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 700, color: '#374151', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Catégorie</label>
+                    <select value={formCategory} onChange={e => setFormCategory(e.target.value as Category)}
+                      style={{ width: '100%', padding: '11px 14px', borderRadius: 12, fontSize: 14, background: '#f9fffe', border: '1.5px solid #daeeed', color: DARK, cursor: 'pointer', appearance: 'none', WebkitAppearance: 'none' }}>
+                      {(Object.entries(CATEGORY_META) as [Category, typeof CATEGORY_META[Category]][]).map(([val, meta]) => (
+                        <option key={val} value={val}>{meta.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 150 }}>
+                    <label style={{ display: 'block', marginBottom: 6, fontSize: 12, fontWeight: 700, color: '#374151', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Date cible (optionnel)</label>
+                    <input type="date" value={formDate} onChange={e => setFormDate(e.target.value)} min={today()}
+                      style={{ width: '100%', padding: '11px 14px', borderRadius: 12, fontSize: 14, background: '#f9fffe', border: '1.5px solid #daeeed', color: DARK, cursor: 'pointer' }} />
+                  </div>
+                </div>
+                <button type="submit" disabled={submitting || !formTitle.trim()}
+                  style={{ padding: '13px', borderRadius: 100, border: 'none', cursor: submitting || !formTitle.trim() ? 'not-allowed' : 'pointer', background: T, color: '#fff', fontWeight: 800, fontSize: 15, boxShadow: `0 4px 16px ${T}40`, opacity: submitting || !formTitle.trim() ? 0.6 : 1, transition: 'all 0.25s', marginTop: 4, fontFamily: 'Inter,sans-serif' }}>
+                  {submitting ? 'Création...' : 'Créer ce défi'}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Active challenges */}
+          <section style={{ marginBottom: 36 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: T, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 14px' }}>
+              Défis en cours{active.length > 0 && <span style={{ marginLeft: 8, background: T, color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: 100, padding: '1px 8px' }}>{active.length}</span>}
+            </p>
+            {loading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {[1, 2].map(i => (
+                  <div key={i} style={{ background: '#fff', border: '1px solid #daeeed', borderRadius: 20, padding: 20, height: 180, opacity: 0.6 }} />
+                ))}
+              </div>
+            ) : active.length === 0 ? (
+              <div style={{ background: '#fff', border: '1px dashed #daeeed', borderRadius: 20, padding: '36px 24px', textAlign: 'center' }}>
+                <svg style={{ margin: '0 auto 12px', display: 'block', opacity: 0.4 }} width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={T} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <p style={{ margin: 0, fontSize: 15, color: '#6B7280', fontWeight: 500 }}>Aucun défi en cours.<br/><span style={{ color: T, fontWeight: 700 }}>Lance ton premier défi !</span></p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {active.map((c, i) => (
+                  <div key={c.id} className="ch-card" style={{ animationDelay: `${i * 0.07}s` }}>
+                    <ChallengeCard challenge={c} onCheckIn={handleCheckIn} onDelete={handleDelete} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Completed challenges */}
+          {(done.length > 0 || !loading) && (
+            <section style={{ marginBottom: 36 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: T, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 14px' }}>
+                Défis accomplis{done.length > 0 && <span style={{ marginLeft: 8, background: '#f59e0b', color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: 100, padding: '1px 8px' }}>{done.length}</span>}
+              </p>
+              {loading ? (
+                <div className="ch-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 14 }}>
+                  {[1, 2].map(i => <div key={i} style={{ background: '#fff', border: '1px solid #daeeed', borderRadius: 18, height: 140, opacity: 0.6 }} />)}
+                </div>
+              ) : done.length === 0 ? (
+                <div style={{ background: '#fff', border: '1px dashed #daeeed', borderRadius: 18, padding: '24px 20px', textAlign: 'center' }}>
+                  <p style={{ margin: 0, fontSize: 14, color: '#9CA3AF' }}>Tes réussites apparaîtront ici une fois tes défis terminés.</p>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {active.map((c, i) => (
-                    <div key={c.id} className="challenge-card" style={{ animationDelay: `${i * 0.07}s` }}>
-                      <ChallengeCard
-                        challenge={c}
-                        onCheckIn={handleCheckIn}
-                        onDelete={handleDelete}
-                      />
+                <div className="ch-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 14 }}>
+                  {done.map((c, i) => (
+                    <div key={c.id} className="ch-card" style={{ animationDelay: `${i * 0.06}s` }}>
+                      <CompletedCard challenge={c} />
                     </div>
                   ))}
                 </div>
               )}
             </section>
+          )}
 
-            {/* ── Défis accomplis ──────────────────────────────────────────── */}
-            {(done.length > 0 || !loading) && (
-              <section style={{ marginBottom: 40 }}>
-                <h2 style={{ margin: '0 0 16px', fontSize: 20, fontWeight: 800, color: '#1a1a2e' }}>
-                  Défis accomplis 🏆
-                  {done.length > 0 && <span style={{
-                    marginLeft: 10, background: 'linear-gradient(135deg, #ffd700, #f59e0b)',
-                    color: '#fff', fontSize: 13, fontWeight: 700, borderRadius: 20,
-                    padding: '2px 10px',
-                  }}>{done.length}</span>}
-                </h2>
+          {/* Suggestions */}
+          <section>
+            <p style={{ fontSize: 11, fontWeight: 700, color: T, letterSpacing: 2, textTransform: 'uppercase', margin: '0 0 4px' }}>Suggestions Capsule</p>
+            <p style={{ margin: '0 0 14px', fontSize: 13, color: '#6B7280' }}>Des idées de défis sélectionnées pour toi</p>
+            <div className="ch-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 14 }}>
+              {SUGGESTIONS.map((s, i) => (
+                <div key={i} className="ch-card" style={{ animationDelay: `${i * 0.08}s` }}>
+                  <SuggestionCard suggestion={s} onAdd={handleAddSuggestion} />
+                </div>
+              ))}
+            </div>
+          </section>
 
-                {loading ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14 }}>
-                    {[1, 2].map(i => (
-                      <div key={i} style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,215,0,0.2)', borderRadius: 18, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        <Skeleton w="30px" h={30} radius={4} />
-                        <Skeleton w="60%" h={16} />
-                        <Skeleton w="80%" h={14} />
-                      </div>
-                    ))}
-                  </div>
-                ) : done.length === 0 ? (
-                  <div style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px dashed rgba(255,215,0,0.25)',
-                    borderRadius: 18, padding: '30px 20px', textAlign: 'center',
-                  }}>
-                    <p style={{ margin: 0, fontSize: 14, color: '#6b6b8a' }}>
-                      Tes trophées apparaîtront ici une fois tes défis terminés. 💪
-                    </p>
-                  </div>
-                ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 14 }}>
-                    {done.map((c, i) => (
-                      <div key={c.id} className="challenge-card" style={{ animationDelay: `${i * 0.06}s` }}>
-                        <CompletedCard challenge={c} />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-            )}
-
-            {/* ── Suggestions Capsule ──────────────────────────────────────── */}
-            <section>
-              <div style={{ marginBottom: 16 }}>
-                <h2 style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800, color: '#1a1a2e' }}>
-                  Suggestions Capsule ✨
-                </h2>
-                <p style={{ margin: 0, fontSize: 13.5, color: '#6b6b8a' }}>
-                  Des idées de défis sélectionnées pour toi
-                </p>
-              </div>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-                gap: 14,
-              }}>
-                {SUGGESTIONS.map((s, i) => (
-                  <div key={i} className="challenge-card" style={{ animationDelay: `${i * 0.08}s` }}>
-                    <SuggestionCard suggestion={s} onAdd={handleAddSuggestion} />
-                  </div>
-                ))}
-              </div>
-            </section>
-
-          </main>
-        </div>
+        </main>
       </div>
 
       <BottomNav lang="fr" />
-
-      <style>{`
-        @media (min-width: 900px) {
-          .sidebar-desktop { display: flex !important; }
-        }
-      `}</style>
     </>
   )
 }
