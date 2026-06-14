@@ -125,6 +125,10 @@ export default function ProfilePage() {
   const [subscription, setSubscription] = useState<any>(null)
   const [loadingPortal, setLoadingPortal] = useState(false)
 
+  // Active challenges (ado)
+  const [activeChallenges, setActiveChallenges] = useState<any[]>([])
+  const [journalCount, setJournalCount] = useState(0)
+
   // Tab: Sécurité
   const [currentPwd, setCurrentPwd] = useState('')
   const [newPwd, setNewPwd] = useState('')
@@ -148,12 +152,18 @@ export default function ProfilePage() {
       { data: sub },
       { data: notifPrefs },
       { data: links },
+      { data: challenges },
+      { count: jCount },
     ] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', u.id).single(),
       supabase.from('subscriptions').select('*').eq('user_id', u.id).eq('status', 'active').maybeSingle(),
       supabase.from('notification_preferences').select('*').eq('user_id', u.id).maybeSingle(),
       supabase.from('family_links').select('*').eq('ado_id', u.id),
+      supabase.from('challenges').select('id,title,category,completed,total_streak,target_date').eq('user_id', u.id).eq('completed', false).order('created_at', { ascending: false }).limit(5),
+      supabase.from('journal_entries').select('id', { count: 'exact', head: true }).eq('user_id', u.id),
     ])
+    if (challenges) setActiveChallenges(challenges)
+    if (jCount !== null) setJournalCount(jCount)
 
     if (prof) {
       setProfile(prof)
@@ -609,6 +619,39 @@ export default function ProfilePage() {
                         <span style={{ color: '#64748B', fontSize: 14 }}>€ / séance</span>
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {profileType === 'ado' && (
+                  <div style={{ marginTop: 28 }}>
+                    <p style={sectionLabel}>Mon activité</p>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
+                      <div style={{ background: `${T}10`, borderRadius: 12, padding: '14px 16px', border: `1px solid ${T}30` }}>
+                        <div style={{ fontSize: 22, fontWeight: 800, color: T }}>{activeChallenges.length}</div>
+                        <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>Défis actifs</div>
+                      </div>
+                      <div style={{ background: `${T}10`, borderRadius: 12, padding: '14px 16px', border: `1px solid ${T}30` }}>
+                        <div style={{ fontSize: 22, fontWeight: 800, color: T }}>{journalCount}</div>
+                        <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>Entrées journal</div>
+                      </div>
+                    </div>
+                    {activeChallenges.length > 0 && (
+                      <>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: '#64748B', marginBottom: 10 }}>Défis en cours</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          {activeChallenges.map(c => (
+                            <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, background: '#f9fffe', borderRadius: 10, padding: '10px 14px', border: '1px solid #daeeed' }}>
+                              <div style={{ width: 8, height: 8, borderRadius: '50%', background: T, flexShrink: 0 }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: DARK, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</div>
+                                <div style={{ fontSize: 11, color: '#64748B' }}>{c.category}{c.total_streak > 0 ? ` · ${c.total_streak} jours` : ''}</div>
+                              </div>
+                              <Link href="/challenges" style={{ fontSize: 12, color: T, fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}>Voir</Link>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
 
