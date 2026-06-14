@@ -430,7 +430,7 @@ export default function ProfilePage() {
           <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
             <Image src="/logo.png" width={34} height={34} alt="Capsule" style={{ borderRadius: 8 }} />
           </Link>
-          <Link href="/dashboard/ado" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', color: T, fontWeight: 600, fontSize: 14 }}>
+          <Link href={profileType ? `/dashboard/${profileType}` : '/'} style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', color: T, fontWeight: 600, fontSize: 14 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
             Retour
           </Link>

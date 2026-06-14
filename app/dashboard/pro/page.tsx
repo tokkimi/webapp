@@ -121,7 +121,7 @@ export default function ProDashboard() {
           <Link href="/appointments" style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Agenda</Link>
           <Link href="/messages" style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Messages</Link>
           <Link href="/patients"     style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Patients</Link>
-          <Link href="/mediatheque"  style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Médiathèque</Link>
+          <Link href="/admin/mediatheque" style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Ressources</Link>
           <Link href="/profile" style={{ width:32,height:32,borderRadius:'50%',overflow:'hidden',background:C.grad,display:'flex',alignItems:'center',justifyContent:'center',color:'#111',fontWeight:800,fontSize:12,textDecoration:'none',flexShrink:0 }}>
             {profile?.avatar_url
               ? <img src={profile.avatar_url} alt="" style={{ width:'100%',height:'100%',objectFit:'cover' }} />
@@ -266,7 +266,7 @@ export default function ProDashboard() {
             </div>
             <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
               <Link href="/profile#subscription" style={{ display:'block',textAlign:'center',color:C.light,fontSize:13,fontWeight:600,textDecoration:'none' }}>Gérer l'abonnement →</Link>
-              <Link href="/profile" style={{ display:'block',textAlign:'center',color:'#6b7280',fontSize:12,textDecoration:'none' }}>Voir mon profil public</Link>
+              {profile?.id && <Link href={`/professionnels/${profile.id}`} style={{ display:'block',textAlign:'center',color:'#6b7280',fontSize:12,textDecoration:'none' }}>Voir mon profil public</Link>}
             </div>
           </div>
 
