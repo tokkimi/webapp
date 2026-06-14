@@ -14,16 +14,15 @@ export async function PATCH(req: NextRequest) {
     if (key in body) patch[key] = body[key]
   }
 
-  const { data, error } = await supabase.from('profiles').upsert(
-    {
-      id: user.id,
-      email: user.email,
-      name: user.user_metadata?.name ?? user.email?.split('@')[0],
-      profile_type: user.user_metadata?.profile_type ?? 'ado',
-      ...patch,
-    },
-    { onConflict: 'id' }
-  ).select().single()
+  // A profile edit must never change the account role. In particular, older
+  // accounts may not have profile_type in auth metadata even though their
+  // database profile is a professional or parent account.
+  const { data, error } = await supabase
+    .from('profiles')
+    .update(patch)
+    .eq('id', user.id)
+    .select()
+    .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true, profile: data })
