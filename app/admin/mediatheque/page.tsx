@@ -44,7 +44,7 @@ export default function AdminMediatheque() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) { router.replace('/auth'); return }
       const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-      if (!['pro', 'admin', 'superadmin'].includes(prof?.profile_type)) { router.replace('/'); return }
+      if (!['admin', 'superadmin'].includes(prof?.profile_type)) { router.replace('/dashboard'); return }
       setProfile(prof)
       loadResources()
     })
@@ -73,12 +73,18 @@ export default function AdminMediatheque() {
       }
       fileUrl = supabase.storage.from('resources').getPublicUrl(path).data.publicUrl
     }
-    const { error: insertError } = await supabase.from('resources').insert({
+    const resourceData: Record<string, any> = {
       title: form.title, description: form.description, url: form.url || null,
       type: form.type, category: form.category, target_profile: form.target_profile,
       tags, approved: ['admin','superadmin'].includes(profile?.profile_type) ? form.approved : false,
-      created_by: user?.id, file_url: fileUrl, file_name: file?.name || null, file_size: file?.size || null,
-    })
+      created_by: user?.id,
+    }
+    if (fileUrl) {
+      resourceData.file_url = fileUrl
+      resourceData.file_name = file?.name || null
+      resourceData.file_size = file?.size || null
+    }
+    const { error: insertError } = await supabase.from('resources').insert(resourceData)
     if (insertError) {
       setError(insertError.message)
       setSaving(false)
@@ -113,7 +119,7 @@ export default function AdminMediatheque() {
       <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}`}</style>
 
       <nav style={{ background:'#1E3A5F',padding:'0 24px',height:58,display:'flex',alignItems:'center',justifyContent:'space-between' }}>
-        <Link href="/dashboard/pro" style={{ fontFamily:'Outfit,sans-serif',fontWeight:800,fontSize:16,color:'#fff',textDecoration:'none' }}>← Dashboard Pro</Link>
+        <Link href="/admin" style={{ fontFamily:'Outfit,sans-serif',fontWeight:800,fontSize:16,color:'#fff',textDecoration:'none' }}>← Administration Capsule</Link>
         <span style={{ color:'rgba(255,255,255,0.8)',fontSize:13 }}>⚙️ Administration Médiathèque</span>
       </nav>
 

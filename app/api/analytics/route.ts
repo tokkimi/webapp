@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     referrer: body.referrer ? String(body.referrer).slice(0, 1000) : null,
     user_agent: req.headers.get('user-agent'),
   })
-  if (error && error.code !== '42P01') {
+  if (error && !['42P01', 'PGRST205'].includes(error.code ?? '')) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
   return NextResponse.json({ ok: true })

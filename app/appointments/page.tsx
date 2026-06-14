@@ -152,17 +152,10 @@ export default function AppointmentsPage() {
 
   const upcoming = appointments.filter(a => new Date(a.scheduled_at) >= new Date() && a.status !== 'cancelled')
   const past = appointments.filter(a => !upcoming.includes(a))
-  const returnHref = selectedPro
-    ? `/professionnels/${encodeURIComponent(selectedPro.id)}`
-    : role
-      ? `/dashboard/${role}`
-      : '/dashboard/ado'
-  const returnLabel = selectedPro ? `Retour au profil de ${selectedPro.name}` : 'Retour à mon espace'
-
   return (
     <div style={{ minHeight: '100vh', background: '#f5fafa', color: DARK, fontFamily: 'Inter, sans-serif' }}>
       <nav style={{ height: 60, padding: '0 20px', background: '#fff', borderBottom: '1px solid #daeeed', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Link href={returnHref} style={{ color: TEAL, textDecoration: 'none', fontWeight: 700 }}>← {returnLabel}</Link>
+        <button onClick={() => router.back()} style={{ border: 0, background: 'transparent', color: TEAL, fontWeight: 700, cursor: 'pointer', fontSize: 14 }}>← Précédent</button>
         <strong style={{ fontFamily: 'Outfit, sans-serif' }}>{role === 'pro' ? 'Mon agenda professionnel' : 'Mes rendez-vous'}</strong>
         <Link href="/messages" style={{ color: DARK, textDecoration: 'none', fontSize: 13 }}>Messages</Link>
       </nav>

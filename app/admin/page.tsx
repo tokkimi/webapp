@@ -91,16 +91,26 @@ export default function AdminDashboard() {
   }
 
   const loadPros = async () => {
-    const { data } = await supabase.from('profiles')
+    let { data, error } = await supabase.from('profiles')
       .select('id,name,email,specialty,adeli_number,verified,verification_status,verification_notes,created_at')
       .eq('profile_type', 'pro').order('created_at', { ascending: false })
+    if (error?.code === '42703') {
+      const fallback = await supabase.from('profiles')
+        .select('id,name,email,specialty,adeli_number,verified,created_at')
+        .eq('profile_type', 'pro').order('created_at', { ascending: false })
+      data = fallback.data as any
+    }
     setPros(data || [])
   }
 
   const loadAnalytics = async () => {
-    const { data } = await supabase.from('page_visits')
+    const { data, error } = await supabase.from('page_visits')
       .select('id,path,session_id,referrer,created_at')
       .order('created_at', { ascending: false }).limit(500)
+    if (error && ['42P01', 'PGRST205'].includes(error.code || '')) {
+      setVisits([])
+      return
+    }
     setVisits(data || [])
   }
 
@@ -120,11 +130,14 @@ export default function AdminDashboard() {
 
   const setProVerification = async (id: string, verified: boolean) => {
     const status = verified ? 'approved' : 'rejected'
-    await supabase.from('profiles').update({
+    const result = await supabase.from('profiles').update({
       verified,
       verification_status: status,
       verified_at: verified ? new Date().toISOString() : null,
     }).eq('id', id)
+    if (result.error?.code === '42703') {
+      await supabase.from('profiles').update({ verified }).eq('id', id)
+    }
     setPros(current => current.map(pro => pro.id === id ? { ...pro, verified, verification_status: status } : pro))
   }
 

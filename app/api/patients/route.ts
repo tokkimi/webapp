@@ -1,6 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedClient } from '@/lib/server-supabase'
 
+const NOTES_PREFIX = 'CAPSULE_NOTES_V1:'
+
+type ClinicalNote = {
+  id: string
+  content: string
+  created_at: string
+  updated_at: string
+}
+
+function parseClinicalNotes(value: unknown, appointmentId: string, scheduledAt: string): ClinicalNote[] {
+  const content = typeof value === 'string' ? value.trim() : ''
+  if (!content) return []
+
+  if (content.startsWith(NOTES_PREFIX)) {
+    try {
+      const notes = JSON.parse(content.slice(NOTES_PREFIX.length))
+      if (Array.isArray(notes)) return notes
+    } catch {
+      // Keep the legacy value visible if stored data is malformed.
+    }
+  }
+
+  return [{
+    id: `legacy-${appointmentId}`,
+    content,
+    created_at: scheduledAt,
+    updated_at: scheduledAt,
+  }]
+}
+
 async function getPro(req: NextRequest) {
   const auth = await getAuthenticatedClient(req)
   if (!auth.user) return { ...auth, allowed: false }
@@ -28,7 +58,16 @@ export async function GET(req: NextRequest) {
     .order('created_at', { ascending: false })
 
   const patients = await Promise.all(patientIds.map(async patientId => {
-    const sessions = (appointments ?? []).filter((a: any) => a.patient_id === patientId)
+    const sessions = (appointments ?? [])
+      .filter((a: any) => a.patient_id === patientId)
+      .map((appointment: any) => ({
+        ...appointment,
+        clinical_notes: parseClinicalNotes(
+          appointment.pro_notes,
+          appointment.id,
+          appointment.scheduled_at
+        ),
+      }))
     const appointmentIds = sessions.map((appointment: any) => appointment.id)
     let sharedResources: any[] = []
     if (appointmentIds.length) {
@@ -77,15 +116,34 @@ export async function POST(req: NextRequest) {
   if (body.action === 'note') {
     const appointmentId = String(body.appointment_id ?? '')
     const { data: appointment } = await supabase.from('appointments')
-      .select('id')
+      .select('id,scheduled_at,pro_notes')
       .eq('id', appointmentId)
       .eq('pro_id', user.id)
       .eq('patient_id', patientId)
       .single()
     if (!appointment) return NextResponse.json({ error: 'Rendez-vous introuvable' }, { status: 404 })
-    const { data, error } = await supabase.from('appointments')
-      .update({ pro_notes: String(body.content ?? '') }).eq('id', appointment.id).select().single()
-    return error ? NextResponse.json({ error: error.message }, { status: 500 }) : NextResponse.json(data)
+    const content = String(body.content ?? '').trim()
+    if (!content) return NextResponse.json({ error: 'La note ne peut pas être vide.' }, { status: 400 })
+
+    const notes = parseClinicalNotes(appointment.pro_notes, appointment.id, appointment.scheduled_at)
+    const requestedId = String(body.note_id ?? '')
+    const existingIndex = notes.findIndex(note => note.id === requestedId)
+    const now = new Date().toISOString()
+    let savedNoteId = requestedId
+
+    if (existingIndex >= 0) {
+      notes[existingIndex] = { ...notes[existingIndex], content, updated_at: now }
+    } else {
+      savedNoteId = crypto.randomUUID()
+      notes.unshift({ id: savedNoteId, content, created_at: now, updated_at: now })
+    }
+
+    const { error } = await supabase.from('appointments')
+      .update({ pro_notes: `${NOTES_PREFIX}${JSON.stringify(notes)}` })
+      .eq('id', appointment.id)
+    return error
+      ? NextResponse.json({ error: error.message }, { status: 500 })
+      : NextResponse.json({ notes, saved_note_id: savedNoteId })
   }
   if (body.action === 'share') {
     const { data: resource } = await supabase.from('resources')
