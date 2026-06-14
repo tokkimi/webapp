@@ -38,6 +38,29 @@ const C = {
   grad:      'linear-gradient(135deg, rgb(20,184,166), rgb(0,173,239))',
 }
 
+type SpaceIconName = 'journal' | 'challenges' | 'messages' | 'media' | 'calendar' | 'search' | 'motivation' | 'profile' | 'home'
+
+function SpaceIcon({ name, color, size = 22, boxSize = 40 }: { name: SpaceIconName; color: string; size?: number; boxSize?: number }) {
+  const paths: Record<SpaceIconName, React.ReactNode> = {
+    journal: <><path d="M5 4h11a3 3 0 0 1 3 3v13H7a2 2 0 0 1-2-2V4Z"/><path d="M8 4v16M11 8h5M11 12h5"/></>,
+    challenges: <><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="m14.5 9.5 5-5M16 4h3v3"/></>,
+    messages: <><path d="M4 5h16v11H9l-5 4V5Z"/><path d="M8 9h8M8 12h5"/></>,
+    media: <><rect x="4" y="5" width="16" height="14" rx="2"/><path d="m7 16 4-4 3 3 2-2 2 3M8 9h.01"/></>,
+    calendar: <><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M8 14h3M13 14h3M8 17h3"/></>,
+    search: <><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></>,
+    motivation: <><path d="M9 18h6M10 22h4"/><path d="M8.5 14.5A7 7 0 1 1 15.5 14.5c-1 .8-1.5 1.8-1.5 3h-4c0-1.2-.5-2.2-1.5-3Z"/></>,
+    profile: <><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></>,
+    home: <><path d="m3 11 9-8 9 8"/><path d="M5 10v10h14V10M9 20v-6h6v6"/></>,
+  }
+  return (
+    <span style={{ width: boxSize, height: boxSize, borderRadius: boxSize > 32 ? 12 : 9, display: 'grid', placeItems: 'center', background: `${color}18`, border: `1px solid ${color}35`, color }}>
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {paths[name]}
+      </svg>
+    </span>
+  )
+}
+
 export default function AdoDashboard() {
   const router = useRouter()
   const supabase = createSupabaseBrowserClient()
@@ -53,6 +76,7 @@ export default function AdoDashboard() {
   const [moodPicking, setMoodPicking] = useState(false)
   const [journals, setJournals]     = useState<any[]>([])
   const [challenges, setChallenges] = useState<any[]>([])
+  const [appointments, setAppointments] = useState<any[]>([])
   const [streak, setStreak]         = useState(0)
   const [loading, setLoading]       = useState(true)
   const [motivLiked, setMotivLiked] = useState<boolean|null>(null)
@@ -66,7 +90,7 @@ export default function AdoDashboard() {
       ? { Authorization: `Bearer ${session.access_token}` }
       : {}
 
-    const [profRes, motivRes, moodsRes, jrnRes, chalRes] = await Promise.all([
+    const [profRes, motivRes, moodsRes, jrnRes, chalRes, aptRes] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', user.id).single(),
       fetch('/api/motivation', { headers: authHeaders }),
       supabase.from('mood_entries').select('score,created_at').eq('user_id', user.id)
@@ -74,6 +98,7 @@ export default function AdoDashboard() {
       supabase.from('journal_entries').select('id,content,created_at').eq('user_id', user.id)
         .order('created_at',{ascending:false}).limit(3),
       supabase.from('challenges').select('*').eq('user_id', user.id).eq('completed',false).limit(4),
+      fetch('/api/appointments', { headers: authHeaders }),
     ])
 
     const prof = profRes.data
@@ -98,6 +123,12 @@ export default function AdoDashboard() {
       setStreak(s)
     }
     setJournals(jrnRes.data||[]); setChallenges(chalRes.data||[])
+    if (aptRes.ok) {
+      const appointmentData = await aptRes.json()
+      setAppointments((appointmentData.appointments || []).filter((appointment: any) =>
+        new Date(appointment.scheduled_at) >= new Date() && appointment.status !== 'cancelled'
+      ))
+    }
     setLoading(false)
   }, []) // eslint-disable-line
 
@@ -131,6 +162,7 @@ export default function AdoDashboard() {
   const firstName = profile?.name?.split(' ')[0] || 'toi'
   const hour = new Date().getHours()
   const greeting = hour<12?'Bonjour':hour<18?'Salut':'Bonsoir'
+  const nextAppointment = appointments[0]
 
   if (loading) return (
     <div style={{ minHeight:'100vh',background:'#0a0a0a',display:'flex',alignItems:'center',justifyContent:'center' }}>
@@ -181,11 +213,18 @@ export default function AdoDashboard() {
         {/* Header */}
         <div style={{ animation:'fadeUp 0.5s ease',marginBottom:24 }}>
           <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:12 }}>
-            <div>
+            <div style={{ display:'flex',alignItems:'center',gap:14 }}>
+              <Link href="/profile" aria-label="Ouvrir mon profil" style={{ width:54,height:54,borderRadius:'50%',overflow:'hidden',background:C.grad,display:'grid',placeItems:'center',color:'#fff',fontWeight:800,fontSize:20,textDecoration:'none',border:`2px solid ${C.primary50}`,boxShadow:`0 0 20px ${C.primary15}`,flexShrink:0 }}>
+                {profile?.avatar_url
+                  ? <img src={profile.avatar_url} alt={`Photo de ${firstName}`} style={{ width:'100%',height:'100%',objectFit:'cover' }} />
+                  : (firstName[0]||'?').toUpperCase()}
+              </Link>
+              <div>
               <h1 style={{ fontFamily:'Outfit,sans-serif',fontSize:26,fontWeight:800,margin:0,color:'#f3f4f6' }}>
                 {greeting}, <span style={{ background:C.grad,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text' }}>{firstName}</span> ✨
               </h1>
               <p style={{ color:'#6b7280',fontSize:13,margin:'3px 0 0' }}>{new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})}</p>
+              </div>
             </div>
             {streak>0 && (
               <div style={{ background:'rgba(249,115,22,0.15)',border:'1px solid rgba(249,115,22,0.25)',borderRadius:100,padding:'5px 14px',display:'flex',alignItems:'center',gap:6 }}>
@@ -271,21 +310,52 @@ export default function AdoDashboard() {
             </div>
           </div>
 
+          {/* Agenda */}
+          <Link href="/appointments" className="dc" style={{ padding:22,animation:'fadeUp 0.5s ease 0.2s both',textDecoration:'none',display:'block',color:'inherit' }}>
+            <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16 }}>
+              <h3 style={{ fontFamily:'Outfit,sans-serif',fontWeight:700,fontSize:14,color:'#f3f4f6',margin:0,display:'flex',alignItems:'center',gap:8 }}>
+                <SpaceIcon name="calendar" color="#2dd4bf" size={17} boxSize={30} /> Mon agenda
+              </h3>
+              <span style={{ color:C.light,fontSize:12,fontWeight:700 }}>Voir tout →</span>
+            </div>
+            {nextAppointment ? (
+              <div style={{ display:'flex',gap:14,alignItems:'center',padding:14,borderRadius:14,background:'linear-gradient(135deg,rgba(45,212,191,.12),rgba(96,165,250,.08))',border:'1px solid rgba(45,212,191,.2)' }}>
+                <div style={{ width:48,height:54,borderRadius:12,background:'#2dd4bf',color:'#052e2b',display:'grid',placeItems:'center',fontFamily:'Outfit,sans-serif',fontWeight:800,lineHeight:1 }}>
+                  <span style={{ fontSize:18 }}>{new Date(nextAppointment.scheduled_at).getDate()}</span>
+                  <span style={{ fontSize:10,textTransform:'uppercase' }}>{new Date(nextAppointment.scheduled_at).toLocaleDateString('fr-FR',{month:'short'})}</span>
+                </div>
+                <div style={{ minWidth:0 }}>
+                  <p style={{ margin:'0 0 4px',fontWeight:700,fontSize:13,color:'#f3f4f6',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis' }}>{nextAppointment.pro?.name || 'Professionnel Capsule'}</p>
+                  <p style={{ margin:0,fontSize:12,color:'#9ca3af' }}>{new Date(nextAppointment.scheduled_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})} · {nextAppointment.status === 'confirmed' ? 'Confirmé' : 'En attente'}</p>
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign:'center',padding:'10px 4px 4px' }}>
+                <div style={{ width:58,height:58,borderRadius:18,background:'rgba(45,212,191,.1)',border:'1px solid rgba(45,212,191,.2)',display:'grid',placeItems:'center',margin:'0 auto 10px',color:'#2dd4bf' }}>
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M8 15h8"/></svg>
+                </div>
+                <p style={{ color:'#d1d5db',fontSize:13,fontWeight:700,margin:'0 0 3px' }}>Aucun rendez-vous prévu</p>
+                <p style={{ color:'#6b7280',fontSize:11,margin:0 }}>Consulter les professionnels</p>
+              </div>
+            )}
+          </Link>
+
           {/* Actions rapides */}
           <div style={{ gridColumn:'1/-1',animation:'fadeUp 0.5s ease 0.22s both' }}>
             <h3 style={{ fontFamily:'Outfit,sans-serif',fontWeight:700,fontSize:14,color:'#9ca3af',margin:'0 0 12px',textTransform:'uppercase',letterSpacing:'0.08em' }}>Mes espaces</h3>
             <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(100px,1fr))',gap:10 }}>
               {[
-                { href:'/journal',         icon:'📔', label:'Journal' },
-                { href:'/challenges',      icon:'🎯', label:'Défis' },
-                { href:'/messages',        icon:'💬', label:'Messages' },
-                { href:'/mediatheque',     icon:'📚', label:'Médiathèque' },
-                { href:'/trouver-un-pro',  icon:'🔍', label:'Trouver un pro' },
-                { href:'/motivation',      icon:'✨', label:'Motivation' },
-                { href:'/profile',         icon:'👤', label:'Profil' },
+                { href:'/journal',         icon:'journal' as const,    color:'#7f9cf5', label:'Journal' },
+                { href:'/challenges',      icon:'challenges' as const, color:'#f472b6', label:'Défis' },
+                { href:'/messages',        icon:'messages' as const,   color:C.light,   label:'Messages' },
+                { href:'/mediatheque',     icon:'media' as const,      color:'#38bdf8', label:'Médiathèque' },
+                { href:'/appointments',    icon:'calendar' as const,   color:'#2dd4bf', label:'Agenda' },
+                { href:'/trouver-un-pro',  icon:'search' as const,     color:'#60a5fa', label:'Trouver un pro' },
+                { href:'/motivation',      icon:'motivation' as const, color:'#fbbf24', label:'Motivation' },
+                { href:'/profile',         icon:'profile' as const,    color:'#a78bfa', label:'Profil' },
               ].map(a=>(
                 <Link key={a.href} href={a.href} className="qa">
-                  <span style={{ fontSize:24 }}>{a.icon}</span>
+                  <SpaceIcon name={a.icon} color={a.color} />
                   <span className="ql" style={{ fontSize:12,fontWeight:600,color:'#9ca3af' }}>{a.label}</span>
                 </Link>
               ))}
@@ -365,14 +435,15 @@ export default function AdoDashboard() {
       {/* Bottom nav */}
       <nav style={{ position:'fixed',bottom:0,left:0,right:0,background:'rgba(10,10,10,0.95)',backdropFilter:'blur(16px)',borderTop:'1px solid rgba(255,255,255,0.07)',display:'flex',justifyContent:'space-around',padding:'6px 0 max(6px,env(safe-area-inset-bottom))' }}>
         {[
-          { href:'/dashboard/ado', icon:'🏠', label:'Accueil' },
-          { href:'/journal',       icon:'📔', label:'Journal' },
-          { href:'/messages',      icon:'💬', label:'Messages' },
-          { href:'/challenges',    icon:'🎯', label:'Défis' },
-          { href:'/profile',       icon:'👤', label:'Profil' },
+          { href:'/dashboard/ado', icon:'home' as const,       color:C.light,   label:'Accueil' },
+          { href:'/journal',       icon:'journal' as const,    color:'#7f9cf5', label:'Journal' },
+          { href:'/appointments',  icon:'calendar' as const,   color:'#2dd4bf', label:'Agenda' },
+          { href:'/messages',      icon:'messages' as const,   color:C.light,   label:'Messages' },
+          { href:'/challenges',    icon:'challenges' as const, color:'#f472b6', label:'Défis' },
+          { href:'/profile',       icon:'profile' as const,    color:'#a78bfa', label:'Profil' },
         ].map(item=>(
           <Link key={item.href} href={item.href} style={{ display:'flex',flexDirection:'column',alignItems:'center',gap:2,textDecoration:'none',padding:'3px 10px' }}>
-            <span style={{ fontSize:18 }}>{item.icon}</span>
+            <SpaceIcon name={item.icon} color={item.color} size={16} boxSize={30} />
             <span style={{ fontSize:10,color:'#6b7280',fontWeight:500 }}>{item.label}</span>
           </Link>
         ))}
