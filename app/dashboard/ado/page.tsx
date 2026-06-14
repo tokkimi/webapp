@@ -146,7 +146,7 @@ export default function AdoDashboard() {
         <Link href="/" style={{ display:'flex',alignItems:'center',gap:10,textDecoration:'none' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" onError={e=>{(e.target as HTMLImageElement).src="/logo.png"}} alt="Capsule" style={{ height:32,objectFit:"contain" }} />
-          <span style={{ fontFamily:'Outfit,sans-serif',fontWeight:800,fontSize:18,color:'rgb(127,217,208)' }}>Capsule Ado</span>
+          <span style={{ fontFamily:"'Audiowide',sans-serif",fontWeight:400,fontSize:16,color:'rgb(127,217,208)',letterSpacing:2 }}>CAPSULE</span>
         </Link>
         <div style={{ display:'flex',alignItems:'center',gap:16 }}>
           <Link href="/mediatheque" style={{ fontSize:13,color:'#9ca3af',textDecoration:'none',fontWeight:500 }}>📚 Médiathèque</Link>

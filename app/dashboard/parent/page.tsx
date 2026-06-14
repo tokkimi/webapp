@@ -5,15 +5,15 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 
-// PARENT colors: Fuchsia palette
+// PARENT colors: Capsule teal
 const C = {
-  primary:   'rgb(217, 70, 239)',
-  primary50: 'rgba(217,70,239,0.5)',
-  primary15: 'rgba(217,70,239,0.15)',
-  primary08: 'rgba(217,70,239,0.08)',
-  light:     'rgb(240, 171, 252)',
-  dark:      'rgb(162, 28, 175)',
-  grad:      'linear-gradient(135deg, rgb(217,70,239), rgb(162,28,175))',
+  primary:   'rgb(48, 180, 167)',
+  primary50: 'rgba(48,180,167,0.5)',
+  primary15: 'rgba(48,180,167,0.15)',
+  primary08: 'rgba(48,180,167,0.08)',
+  light:     'rgb(127, 217, 208)',
+  dark:      'rgb(14, 116, 144)',
+  grad:      'linear-gradient(135deg, rgb(48,180,167), rgb(8,40,39))',
 }
 
 const MOODS = ['😭','😢','😟','😕','😐','🙂','😊','😄','🤩','🌟']
@@ -112,11 +112,11 @@ export default function ParentDashboard() {
         <Link href="/" style={{ display:'flex',alignItems:'center',gap:10,textDecoration:'none' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" onError={e=>{(e.target as HTMLImageElement).src="/logo.png"}} alt="Capsule" style={{ height:32,objectFit:"contain" }} />
-          <span style={{ fontFamily:'Outfit,sans-serif',fontWeight:800,fontSize:18,color:C.light }}>Capsule Ado</span>
+          <span style={{ fontFamily:"'Audiowide',sans-serif",fontWeight:400,fontSize:16,color:C.light,letterSpacing:2 }}>CAPSULE</span>
         </Link>
         <div style={{ display:'flex',alignItems:'center',gap:16 }}>
           <Link href="/appointments" style={{ fontSize:13,color:'#9ca3af',textDecoration:'none',fontWeight:500 }}>📅 Rendez-vous</Link>
-          <Link href="/mediatheque"  style={{ fontSize:13,color:'#9ca3af',textDecoration:'none',fontWeight:500 }}>📚 Ressources</Link>
+          <Link href="/mediatheque"  style={{ fontSize:13,color:'#9ca3af',textDecoration:'none',fontWeight:500 }}>Ressources</Link>
           <Link href="/profile" style={{ width:32,height:32,borderRadius:'50%',background:C.grad,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:700,fontSize:12,textDecoration:'none' }}>
             {(firstName[0]||'?').toUpperCase()}
           </Link>
@@ -230,7 +230,7 @@ export default function ParentDashboard() {
             <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
               {[
                 { href:'/appointments',icon:'🔍',label:'Trouver un professionnel',sub:'Psychologues, éducateurs, médecins' },
-                { href:'/mediatheque', icon:'📚',label:'Ressources parents',sub:'Articles et guides pour vous' },
+                { href:'/mediatheque', icon:'»',label:'Ressources parents',sub:'Articles et guides pour vous' },
                 { href:'/profile',     icon:'⚙️',label:'Mon profil',sub:'Paramètres et abonnement' },
               ].map(a=>(
                 <Link key={a.href} href={a.href} style={{ display:'flex',alignItems:'center',gap:12,padding:'12px 14px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:12,textDecoration:'none',transition:'all 0.2s' }}

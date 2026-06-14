@@ -5,22 +5,22 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
 
-// PRO colors: Yellow palette (dark bg → yellow text/accents)
+// PRO colors: Capsule teal
 const C = {
-  primary:   'rgb(234, 179, 8)',
-  primary50: 'rgba(234,179,8,0.5)',
-  primary15: 'rgba(234,179,8,0.15)',
-  primary08: 'rgba(234,179,8,0.08)',
-  light:     'rgb(253, 224, 71)',
-  dark:      'rgb(161, 98, 7)',
-  grad:      'linear-gradient(135deg, rgb(250,204,21), rgb(161,98,7))',
-  gradText:  'linear-gradient(135deg, rgb(253,224,71), rgb(234,179,8))',
+  primary:   'rgb(48, 180, 167)',
+  primary50: 'rgba(48,180,167,0.5)',
+  primary15: 'rgba(48,180,167,0.15)',
+  primary08: 'rgba(48,180,167,0.08)',
+  light:     'rgb(127, 217, 208)',
+  dark:      'rgb(14, 116, 144)',
+  grad:      'linear-gradient(135deg, rgb(48,180,167), rgb(8,40,39))',
+  gradText:  'linear-gradient(135deg, rgb(127,217,208), rgb(48,180,167))',
 }
 
 const STATUS_COLORS: Record<string,string> = { pending:'rgb(251,146,60)', confirmed:'rgb(20,184,166)', cancelled:'rgb(239,68,68)', completed:'rgb(127,217,208)' }
 const STATUS_BG: Record<string,string>     = { pending:'rgba(251,146,60,0.12)', confirmed:'rgba(20,184,166,0.12)', cancelled:'rgba(239,68,68,0.12)', completed:'rgba(127,217,208,0.12)' }
 const STATUS_LABELS: Record<string,string> = { pending:'En attente', confirmed:'Confirmé', cancelled:'Annulé', completed:'Terminé' }
-const TYPE_LABELS: Record<string,string>   = { video:'🎥 Vidéo', phone:'📞 Tél.', in_person:'🏥 Cabinet' }
+const TYPE_LABELS: Record<string,string>   = { video:'Vidéo', phone:'Tél.', in_person:'Cabinet' }
 
 export default function ProDashboard() {
   const router = useRouter()
@@ -111,7 +111,7 @@ export default function ProDashboard() {
         <Link href="/" style={{ display:'flex',alignItems:'center',gap:10,textDecoration:'none' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" onError={e=>{(e.target as HTMLImageElement).src="/logo.png"}} alt="Capsule" style={{ height:32,objectFit:"contain" }} />
-          <span style={{ fontFamily:'Outfit,sans-serif',fontWeight:800,fontSize:18,color:C.light }}>Capsule Ado <span style={{ fontSize:12,color:'#6b7280',fontWeight:500 }}>Pro</span></span>
+          <span style={{ fontFamily:"'Audiowide',sans-serif",fontWeight:400,fontSize:16,color:C.light,letterSpacing:2 }}>CAPSULE</span>
         </Link>
         <div style={{ display:'flex',alignItems:'center',gap:16 }}>
           <Link href="/appointments" style={{ fontSize:13,color:'#9ca3af',textDecoration:'none',fontWeight:500 }}>📅 Agenda</Link>
