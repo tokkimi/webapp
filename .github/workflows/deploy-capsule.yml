@@ -13,12 +13,23 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_CAPSULE }}
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      NEXT_PUBLIC_SUPABASE_URL: https://ctyrpbkicfswuabmuqxc.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_GWLgJZXC6_3AXl2HtVKuOQ_OOvAKORX
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Set Supabase env vars on Vercel project
+        run: |
+          echo "https://ctyrpbkicfswuabmuqxc.supabase.co" | vercel env add NEXT_PUBLIC_SUPABASE_URL production --token=$VERCEL_TOKEN --force 2>/dev/null || true
+          echo "https://ctyrpbkicfswuabmuqxc.supabase.co" | vercel env add NEXT_PUBLIC_SUPABASE_URL preview --token=$VERCEL_TOKEN --force 2>/dev/null || true
+          echo "sb_publishable_GWLgJZXC6_3AXl2HtVKuOQ_OOvAKORX" | vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production --token=$VERCEL_TOKEN --force 2>/dev/null || true
+          echo "sb_publishable_GWLgJZXC6_3AXl2HtVKuOQ_OOvAKORX" | vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY preview --token=$VERCEL_TOKEN --force 2>/dev/null || true
+
       - name: Deploy to Vercel (Capsule)
         run: |
-          npm install -g vercel@latest
           vercel pull --yes --environment=production --token=$VERCEL_TOKEN
           vercel build --prod --token=$VERCEL_TOKEN
           URL=$(vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN)
