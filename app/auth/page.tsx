@@ -141,14 +141,38 @@ function AuthContent() {
     : PANEL_CONTENT.register[profileType]
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'Inter, system-ui, sans-serif' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, system-ui, sans-serif' }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800;900&family=Audiowide&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
         input,select,textarea{font-family:inherit}
         input:focus,select:focus{border-color:${T}!important;box-shadow:0 0 0 3px rgba(48,180,167,.12)!important}
         @media(max-width:900px){.auth-panel{display:none!important}}
+        .nav-link-auth{text-decoration:none;font-size:13.5px;font-weight:500;color:#444;transition:color .15s}
+        .nav-link-auth:hover{color:${T}}
       `}</style>
+
+      {/* Nav */}
+      <nav style={{ borderBottom: '1px solid #e8f5f4', padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'white', position: 'sticky', top: 0, zIndex: 50, flexShrink: 0 }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <Image src="/logo.png" alt="Capsule" width={36} height={36} style={{ objectFit: 'contain' }} />
+        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+          {[
+            { label: 'Accueil', href: '/' },
+            { label: 'Abonnements', href: '/abonnements' },
+            { label: 'Notre histoire', href: '/notre-histoire' },
+            { label: 'Articles', href: '/articles' },
+            { label: 'FAQ', href: '/faq' },
+          ].map(l => (
+            <Link key={l.href} href={l.href} className="nav-link-auth">{l.label}</Link>
+          ))}
+        </div>
+        <Link href="/dons" style={{ padding: '8px 20px', borderRadius: 100, border: `1.5px solid ${T}`, color: T, textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>Soutenez-nous</Link>
+      </nav>
+
+      {/* Body */}
+      <div style={{ flex: 1, display: 'flex' }}>
 
       {/* Left dark panel */}
       <div className="auth-panel" style={{
@@ -381,6 +405,7 @@ function AuthContent() {
             </Link>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )
