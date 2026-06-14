@@ -262,12 +262,13 @@ export default function AdoDashboard() {
             <h3 style={{ fontFamily:'Outfit,sans-serif',fontWeight:700,fontSize:14,color:'#9ca3af',margin:'0 0 12px',textTransform:'uppercase',letterSpacing:'0.08em' }}>Mes espaces</h3>
             <div style={{ display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(100px,1fr))',gap:10 }}>
               {[
-                { href:'/journal',    icon:'📔', label:'Journal' },
-                { href:'/challenges', icon:'🎯', label:'Défis' },
-                { href:'/chat',       icon:'💬', label:'Chat IA' },
-                { href:'/mediatheque',icon:'📚', label:'Médiathèque' },
-                { href:'/motivation', icon:'✨', label:'Motivation' },
-                { href:'/profile',    icon:'👤', label:'Profil' },
+                { href:'/journal',         icon:'📔', label:'Journal' },
+                { href:'/challenges',      icon:'🎯', label:'Défis' },
+                { href:'/chat',            icon:'💬', label:'Chat IA' },
+                { href:'/mediatheque',     icon:'📚', label:'Médiathèque' },
+                { href:'/trouver-un-pro',  icon:'🔍', label:'Trouver un pro' },
+                { href:'/motivation',      icon:'✨', label:'Motivation' },
+                { href:'/profile',         icon:'👤', label:'Profil' },
               ].map(a=>(
                 <Link key={a.href} href={a.href} className="qa">
                   <span style={{ fontSize:24 }}>{a.icon}</span>

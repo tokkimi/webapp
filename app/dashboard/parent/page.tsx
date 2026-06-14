@@ -228,9 +228,10 @@ export default function ParentDashboard() {
             <h3 style={{ fontFamily:'Outfit,sans-serif',fontWeight:700,fontSize:15,color:'#f3f4f6',margin:'0 0 14px' }}>🔗 Actions rapides</h3>
             <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
               {[
-                { href:'/appointments',icon:'🔍',label:'Trouver un professionnel',sub:'Psychologues, éducateurs, médecins' },
-                { href:'/mediatheque', icon:'»',label:'Ressources parents',sub:'Articles et guides pour vous' },
-                { href:'/profile',     icon:'⚙️',label:'Mon profil',sub:'Paramètres et abonnement' },
+                { href:'/trouver-un-pro', icon:'🔍',label:'Trouver un professionnel',sub:'Psychologues, éducateurs, médecins' },
+                { href:'/appointments',   icon:'📅',label:'Mes rendez-vous',sub:'Gérer et suivre vos RDV' },
+                { href:'/mediatheque',    icon:'»',label:'Ressources parents',sub:'Articles et guides pour vous' },
+                { href:'/profile',        icon:'⚙️',label:'Mon profil',sub:'Paramètres et abonnement' },
               ].map(a=>(
                 <Link key={a.href} href={a.href} style={{ display:'flex',alignItems:'center',gap:12,padding:'12px 14px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:12,textDecoration:'none',transition:'all 0.2s' }}
                   onMouseEnter={e=>{(e.currentTarget as HTMLElement).style.background=C.primary08;(e.currentTarget as HTMLElement).style.borderColor=C.primary15}}
