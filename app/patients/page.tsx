@@ -14,6 +14,7 @@ export default function PatientsPage() {
   const [patients, setPatients] = useState<any[]>([])
   const [resources, setResources] = useState<any[]>([])
   const [selected, setSelected] = useState<any>(null)
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState('')
   const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -44,15 +45,44 @@ export default function PatientsPage() {
 
   function selectPatient(patient: any) {
     setSelected(patient)
-    setNote(patient.note || '')
+    const appointment = patient.appointments[0]
+    setSelectedAppointmentId(appointment?.id || '')
+    setNote(appointment?.pro_notes || '')
+    setError('')
+    setMessage('')
+  }
+
+  function selectAppointment(patient: any, appointmentId: string) {
+    const appointment = patient.appointments.find((item: any) => item.id === appointmentId)
+    setSelectedAppointmentId(appointmentId)
+    setNote(appointment?.pro_notes || '')
+    setError('')
+    setMessage('')
   }
 
   async function saveNote() {
-    if (!selected) return
+    if (!selected || !selectedAppointmentId) return
     setSaving(true)
-    const response = await api({ action: 'note', patient_id: selected.id, content: note })
+    setError('')
+    setMessage('')
+    const response = await api({
+      action: 'note',
+      patient_id: selected.id,
+      appointment_id: selectedAppointmentId,
+      content: note,
+    })
     setSaving(false)
-    if (!response.ok) setError((await response.json()).error)
+    if (!response.ok) {
+      setError((await response.json()).error)
+      return
+    }
+    setPatients(current => current.map(patient => patient.id !== selected.id ? patient : {
+      ...patient,
+      appointments: patient.appointments.map((appointment: any) =>
+        appointment.id === selectedAppointmentId ? { ...appointment, pro_notes: note } : appointment
+      ),
+    }))
+    setMessage('Note professionnelle sauvegardee.')
   }
 
   async function shareResource(resourceId: string) {
@@ -78,17 +108,17 @@ export default function PatientsPage() {
       <main style={{ maxWidth: 1150, margin: '0 auto', padding: '28px 16px' }}>
         <div style={{ marginBottom: 22 }}>
           <p style={{ color: T, textTransform: 'uppercase', letterSpacing: 1.5, fontSize: 11, fontWeight: 800, margin: 0 }}>Espace professionnel</p>
-          <h1 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 30, margin: '7px 0' }}>Mes clients</h1>
-          <p style={{ color: '#64748b', margin: 0 }}>Uniquement les personnes ayant un rendez-vous avec vous.</p>
+          <h1 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 30, margin: '7px 0' }}>Mes patients</h1>
+          <p style={{ color: '#64748b', margin: 0 }}>Tous les patients ayant eu ou planifie un rendez-vous avec vous.</p>
         </div>
         {error && <div style={{ padding: 12, borderRadius: 12, background: '#fee2e2', color: '#991b1b', marginBottom: 14 }}>{error}</div>}
         {message && <div style={{ padding: 12, borderRadius: 12, background: '#eaf8f6', color: '#087f73', marginBottom: 14 }}>{message}</div>}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(240px,320px) 1fr', gap: 18 }}>
           <aside style={card}>
-            <strong>{patients.length} client{patients.length > 1 ? 's' : ''}</strong>
+            <strong>{patients.length} patient{patients.length > 1 ? 's' : ''}</strong>
             <div style={{ marginTop: 14, display: 'grid', gap: 7 }}>
-              {patients.length === 0 && <p style={{ color: '#64748b' }}>Aucun client pour le moment.</p>}
+              {patients.length === 0 && <p style={{ color: '#64748b' }}>Aucun patient pour le moment.</p>}
               {patients.map(patient => (
                 <button key={patient.id} onClick={() => selectPatient(patient)} style={{
                   border: `1px solid ${selected?.id === patient.id ? T : '#dceeed'}`,
@@ -103,7 +133,7 @@ export default function PatientsPage() {
           </aside>
 
           <section style={card}>
-            {!selected ? <p style={{ color: '#64748b' }}>Sélectionnez un client.</p> : (
+            {!selected ? <p style={{ color: '#64748b' }}>Sélectionnez un patient.</p> : (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, borderBottom: '1px solid #e5f2f0', paddingBottom: 18 }}>
                   {selected.avatar_url
@@ -127,6 +157,17 @@ export default function PatientsPage() {
                 </div>
 
                 <h3 style={heading}>Note professionnelle privée</h3>
+                <select
+                  value={selectedAppointmentId}
+                  onChange={event => selectAppointment(selected, event.target.value)}
+                  style={{ width: '100%', border: '1px solid #cfe8e5', borderRadius: 12, padding: 12, background: '#fff', marginBottom: 10 }}
+                >
+                  {selected.appointments.map((appointment: any) => (
+                    <option key={appointment.id} value={appointment.id}>
+                      Séance du {new Date(appointment.scheduled_at).toLocaleString('fr-FR')}
+                    </option>
+                  ))}
+                </select>
                 <textarea value={note} onChange={e => setNote(e.target.value)} rows={7} placeholder="Observations et suivi..."
                   style={{ width: '100%', border: '1px solid #cfe8e5', borderRadius: 13, padding: 14, resize: 'vertical' }} />
                 <button onClick={saveNote} disabled={saving} style={primaryButton}>{saving ? 'Sauvegarde...' : 'Sauvegarder la note'}</button>

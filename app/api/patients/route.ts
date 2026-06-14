@@ -46,12 +46,16 @@ export async function POST(req: NextRequest) {
   const patientId = String(body.patient_id ?? '')
 
   if (body.action === 'note') {
-    const { data: latest } = await supabase.from('appointments')
-      .select('id').eq('pro_id', user.id).eq('patient_id', patientId)
-      .order('scheduled_at', { ascending: false }).limit(1).single()
-    if (!latest) return NextResponse.json({ error: 'Client introuvable' }, { status: 404 })
+    const appointmentId = String(body.appointment_id ?? '')
+    const { data: appointment } = await supabase.from('appointments')
+      .select('id')
+      .eq('id', appointmentId)
+      .eq('pro_id', user.id)
+      .eq('patient_id', patientId)
+      .single()
+    if (!appointment) return NextResponse.json({ error: 'Rendez-vous introuvable' }, { status: 404 })
     const { data, error } = await supabase.from('appointments')
-      .update({ pro_notes: String(body.content ?? '') }).eq('id', latest.id).select().single()
+      .update({ pro_notes: String(body.content ?? '') }).eq('id', appointment.id).select().single()
     return error ? NextResponse.json({ error: error.message }, { status: 500 }) : NextResponse.json(data)
   }
   if (body.action === 'share') {
