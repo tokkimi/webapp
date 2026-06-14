@@ -44,7 +44,11 @@ export default function AdoDashboard() {
 
   const [profile, setProfile]       = useState<any>(null)
   const [motivation, setMotivation] = useState<any>(null)
-  const [todayMood, setTodayMood]   = useState<number|null>(null)
+  const [todayMood, setTodayMood]   = useState<number|null>(() => {
+    if (typeof window === 'undefined') return null
+    const saved = localStorage.getItem('capsule_mood_' + new Date().toISOString().split('T')[0])
+    return saved ? parseInt(saved) : null
+  })
   const [moodHistory, setMoodHistory] = useState<Record<string,number>>({})
   const [moodPicking, setMoodPicking] = useState(false)
   const [journals, setJournals]     = useState<any[]>([])
@@ -100,6 +104,7 @@ export default function AdoDashboard() {
     if (!user) return
     setTodayMood(score); setMoodPicking(false)
     const today = new Date().toISOString().split('T')[0]
+    localStorage.setItem('capsule_mood_' + today, String(score))
     await supabase.from('mood_entries').insert({ user_id:user.id, score, emoji:MOODS[score-1].emoji })
     setMoodHistory(p => ({...p, [today]:score}))
   }

@@ -80,7 +80,7 @@ export default function Mediatheque() {
         @keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
         .rescard{background:#fff;border-radius:16px;border:1px solid #daeeed;box-shadow:0 2px 8px rgba(48,180,167,0.06);transition:all 0.2s;overflow:hidden;}
         .rescard:hover{box-shadow:0 6px 20px rgba(48,180,167,0.14);transform:translateY(-2px);}
-        .catbtn{border:1.5px solid #daeeed;background:#fff;border-radius:100px;padding:7px 14px;font-size:13px;font-family:Inter,sans-serif;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+        .catbtn{border:1.5px solid #daeeed;background:#fff;color:#444;border-radius:100px;padding:7px 14px;font-size:13px;font-family:Inter,sans-serif;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-weight:500;}
         .catbtn.active{background:${T};border-color:${T};color:#fff;}
         .catbtn:hover:not(.active){border-color:${T};color:${T};}
         @media(max-width:640px){
