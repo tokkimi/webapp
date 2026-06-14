@@ -17,6 +17,7 @@ export default function PatientsPage() {
   const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
 
   async function api(body?: object) {
     const { data: { session } } = await supabase.auth.getSession()
@@ -43,7 +44,7 @@ export default function PatientsPage() {
 
   function selectPatient(patient: any) {
     setSelected(patient)
-    setNote(patient.note?.content || '')
+    setNote(patient.note || '')
   }
 
   async function saveNote() {
@@ -56,9 +57,10 @@ export default function PatientsPage() {
 
   async function shareResource(resourceId: string) {
     if (!selected || !resourceId) return
+    setMessage('')
     const response = await api({ action: 'share', patient_id: selected.id, resource_id: resourceId })
     if (!response.ok) setError((await response.json()).error)
-    else await load()
+    else setMessage('Ressource envoyée dans la conversation du client.')
   }
 
   useEffect(() => { load() }, []) // eslint-disable-line
@@ -80,6 +82,7 @@ export default function PatientsPage() {
           <p style={{ color: '#64748b', margin: 0 }}>Uniquement les personnes ayant un rendez-vous avec vous.</p>
         </div>
         {error && <div style={{ padding: 12, borderRadius: 12, background: '#fee2e2', color: '#991b1b', marginBottom: 14 }}>{error}</div>}
+        {message && <div style={{ padding: 12, borderRadius: 12, background: '#eaf8f6', color: '#087f73', marginBottom: 14 }}>{message}</div>}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'minmax(240px,320px) 1fr', gap: 18 }}>
           <aside style={card}>
@@ -132,18 +135,11 @@ export default function PatientsPage() {
                 <select defaultValue="" onChange={e => { shareResource(e.target.value); e.target.value = '' }}
                   style={{ width: '100%', border: '1px solid #cfe8e5', borderRadius: 12, padding: 12, background: '#fff' }}>
                   <option value="" disabled>Choisir une ressource approuvée...</option>
-                  {resources.filter(resource => !selected.resource_ids.includes(resource.id)).map(resource => (
+                  {resources.map(resource => (
                     <option key={resource.id} value={resource.id}>{resource.title}</option>
                   ))}
                 </select>
-                <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
-                  {resources.filter(resource => selected.resource_ids.includes(resource.id)).map(resource => (
-                    <div key={resource.id} style={row}>
-                      <span>{resource.title}</span>
-                      {resource.url && <a href={resource.url} target="_blank" rel="noreferrer" style={{ color: T }}>Ouvrir</a>}
-                    </div>
-                  ))}
-                </div>
+                <p style={{ color: '#64748b', fontSize: 12 }}>La ressource sélectionnée est envoyée directement dans Messages.</p>
               </>
             )}
           </section>

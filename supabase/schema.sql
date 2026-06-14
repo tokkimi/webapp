@@ -189,16 +189,6 @@ create table if not exists public.ratings (
   created_at timestamptz not null default now()
 );
 
-create table if not exists public.clinical_notes (
-  id uuid primary key default gen_random_uuid(),
-  pro_id uuid not null references public.profiles(id) on delete cascade,
-  patient_id uuid not null references public.profiles(id) on delete cascade,
-  content text not null default '',
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (pro_id, patient_id)
-);
-
 create or replace function public.book_appointment(
   requested_slot uuid,
   requested_type text default 'video',
@@ -390,15 +380,6 @@ create table if not exists public.ai_config (
 
 alter table public.resources add column if not exists created_by uuid references public.profiles(id) on delete set null;
 
-create table if not exists public.patient_resources (
-  id uuid primary key default gen_random_uuid(),
-  pro_id uuid not null references public.profiles(id) on delete cascade,
-  patient_id uuid not null references public.profiles(id) on delete cascade,
-  resource_id uuid not null references public.resources(id) on delete cascade,
-  created_at timestamptz not null default now(),
-  unique (pro_id, patient_id, resource_id)
-);
-
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -471,8 +452,6 @@ alter table public.conversations enable row level security;
 alter table public.conversation_members enable row level security;
 alter table public.messages enable row level security;
 alter table public.ratings enable row level security;
-alter table public.clinical_notes enable row level security;
-alter table public.patient_resources enable row level security;
 alter table public.notification_preferences enable row level security;
 alter table public.family_links enable row level security;
 alter table public.resources enable row level security;
@@ -575,20 +554,6 @@ create policy ratings_patient_insert on public.ratings for insert with check (
     where a.id = appointment_id and a.patient_id = auth.uid() and a.pro_id = pro_id and a.status = 'completed'
   )
 );
-create policy clinical_notes_pro_all on public.clinical_notes for all
-  using (pro_id = auth.uid()) with check (
-    pro_id = auth.uid() and exists (
-      select 1 from public.appointments a
-      where a.pro_id = auth.uid() and a.patient_id = clinical_notes.patient_id
-    )
-  );
-create policy patient_resources_pro_all on public.patient_resources for all
-  using (pro_id = auth.uid()) with check (
-    pro_id = auth.uid() and exists (
-      select 1 from public.appointments a
-      where a.pro_id = auth.uid() and a.patient_id = patient_resources.patient_id
-    )
-  );
 
 create policy family_members_all on public.family_links for all
   using (auth.uid() in (parent_id, ado_id))
@@ -628,8 +593,7 @@ grant all on public.profiles, public.journal_entries, public.mood_entries, publi
   public.availability_slots, public.appointments, public.conversations, public.conversation_members,
   public.messages, public.ratings, public.notification_preferences, public.family_links,
   public.resources, public.newsletter_subscribers, public.notifications, public.subscriptions,
-  public.daily_motivations, public.user_motivations, public.ai_config,
-  public.clinical_notes, public.patient_resources to authenticated;
+  public.daily_motivations, public.user_motivations, public.ai_config to authenticated;
 grant select on public.resources to anon;
 grant insert on public.newsletter_subscribers to anon;
 

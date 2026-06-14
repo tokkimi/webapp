@@ -15,25 +15,24 @@ export async function GET(req: NextRequest) {
 
   const { data: appointments, error } = await supabase
     .from('appointments')
-    .select('id,patient_id,scheduled_at,duration_minutes,type,status,notes_for_pro,patient:profiles!appointments_patient_id_fkey(id,name,email,phone,avatar_url,birth_date)')
+    .select('id,patient_id,scheduled_at,duration_minutes,type,status,notes_for_pro,pro_notes,patient:profiles!appointments_patient_id_fkey(id,name,email,phone,avatar_url,birth_date)')
     .eq('pro_id', user.id)
     .order('scheduled_at', { ascending: false })
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   const patientIds = [...new Set((appointments ?? []).map((a: any) => a.patient_id))]
-  const [{ data: notes }, { data: shares }, { data: resources }] = await Promise.all([
-    patientIds.length ? supabase.from('clinical_notes').select('*').eq('pro_id', user.id).in('patient_id', patientIds) : Promise.resolve({ data: [] }),
-    patientIds.length ? supabase.from('patient_resources').select('*').eq('pro_id', user.id).in('patient_id', patientIds) : Promise.resolve({ data: [] }),
-    supabase.from('resources').select('id,title,description,url,type,category').eq('approved', true).order('created_at', { ascending: false }),
-  ])
+  const { data: resources } = await supabase
+    .from('resources')
+    .select('id,title,description,url,type,category')
+    .eq('approved', true)
+    .order('created_at', { ascending: false })
 
   const patients = patientIds.map(patientId => {
     const sessions = (appointments ?? []).filter((a: any) => a.patient_id === patientId)
     return {
       ...(sessions[0] as any).patient,
       appointments: sessions,
-      note: (notes ?? []).find((n: any) => n.patient_id === patientId) ?? null,
-      resource_ids: (shares ?? []).filter((s: any) => s.patient_id === patientId).map((s: any) => s.resource_id),
+      note: sessions.find((appointment: any) => appointment.pro_notes)?.pro_notes ?? '',
     }
   })
   return NextResponse.json({ patients, resources: resources ?? [] })
@@ -47,17 +46,28 @@ export async function POST(req: NextRequest) {
   const patientId = String(body.patient_id ?? '')
 
   if (body.action === 'note') {
-    const { data, error } = await supabase.from('clinical_notes').upsert(
-      { pro_id: user.id, patient_id: patientId, content: String(body.content ?? ''), updated_at: new Date().toISOString() },
-      { onConflict: 'pro_id,patient_id' }
-    ).select().single()
+    const { data: latest } = await supabase.from('appointments')
+      .select('id').eq('pro_id', user.id).eq('patient_id', patientId)
+      .order('scheduled_at', { ascending: false }).limit(1).single()
+    if (!latest) return NextResponse.json({ error: 'Client introuvable' }, { status: 404 })
+    const { data, error } = await supabase.from('appointments')
+      .update({ pro_notes: String(body.content ?? '') }).eq('id', latest.id).select().single()
     return error ? NextResponse.json({ error: error.message }, { status: 500 }) : NextResponse.json(data)
   }
   if (body.action === 'share') {
-    const { error } = await supabase.from('patient_resources').upsert(
-      { pro_id: user.id, patient_id: patientId, resource_id: body.resource_id },
-      { onConflict: 'pro_id,patient_id,resource_id' }
-    )
+    const { data: resource } = await supabase.from('resources')
+      .select('title,url').eq('id', body.resource_id).eq('approved', true).single()
+    const { data: appointment } = await supabase.from('appointments')
+      .select('id').eq('pro_id', user.id).eq('patient_id', patientId)
+      .order('scheduled_at', { ascending: false }).limit(1).single()
+    if (!resource || !appointment) return NextResponse.json({ error: 'Ressource ou client introuvable' }, { status: 404 })
+    const { data: conversation } = await supabase.from('conversations')
+      .select('id').eq('appointment_id', appointment.id).single()
+    if (!conversation) return NextResponse.json({ error: 'Conversation introuvable' }, { status: 404 })
+    const content = `Ressource partagee : ${resource.title}${resource.url ? ` - ${resource.url}` : ''}`
+    const { error } = await supabase.from('messages').insert({
+      conversation_id: conversation.id, sender_id: user.id, content,
+    })
     return error ? NextResponse.json({ error: error.message }, { status: 500 }) : NextResponse.json({ ok: true })
   }
   return NextResponse.json({ error: 'Action inconnue' }, { status: 400 })
