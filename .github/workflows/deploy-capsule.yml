@@ -28,6 +28,39 @@ jobs:
           echo "sb_publishable_GWLgJZXC6_3AXl2HtVKuOQ_OOvAKORX" | vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production --token=$VERCEL_TOKEN --force 2>/dev/null || true
           echo "sb_publishable_GWLgJZXC6_3AXl2HtVKuOQ_OOvAKORX" | vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY preview --token=$VERCEL_TOKEN --force 2>/dev/null || true
 
+      - name: Set Anthropic API key on Vercel
+        run: |
+          if [ -n "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
+            echo "${{ secrets.ANTHROPIC_API_KEY }}" | vercel env add ANTHROPIC_API_KEY production --token=$VERCEL_TOKEN --force 2>/dev/null || true
+            echo "${{ secrets.ANTHROPIC_API_KEY }}" | vercel env add ANTHROPIC_API_KEY preview --token=$VERCEL_TOKEN --force 2>/dev/null || true
+          fi
+
+      - name: Apply SQL schema to Supabase
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "SUPABASE_SERVICE_ROLE_KEY not set, skipping schema migration"
+            exit 0
+          fi
+          SUPA_URL="https://ctyrpbkicfswuabmuqxc.supabase.co"
+          # Apply schema via Supabase REST (exec_sql RPC must exist, or use pg endpoint)
+          # Use the Management API approach: POST to /rest/v1/rpc/exec_sql won't work without the function
+          # Instead apply each CREATE TABLE via direct SQL using service_role key with pg endpoint
+          apply_sql() {
+            curl -s -X POST "$SUPA_URL/rest/v1/rpc/exec_sql" \
+              -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+              -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+              -H "Content-Type: application/json" \
+              -d "{\"sql\": $(echo "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')}" \
+              2>/dev/null || true
+          }
+          # Read and apply schema
+          SCHEMA=$(cat supabase/schema.sql)
+          echo "Applying schema via Supabase..."
+          apply_sql "$SCHEMA"
+          echo "Schema migration step complete."
+
       - name: Create test accounts in Supabase
         run: |
           SUPA_URL="https://ctyrpbkicfswuabmuqxc.supabase.co"
