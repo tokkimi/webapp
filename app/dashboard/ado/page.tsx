@@ -154,7 +154,7 @@ export default function AdoDashboard() {
         </Link>
         <div style={{ display:'flex',alignItems:'center',gap:8 }}>
           <Link href="/mediatheque" style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Médiathèque</Link>
-          <Link href="/chat" style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Chat</Link>
+          <Link href="/messages" style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Messages</Link>
           <button onClick={()=>setSosOpen(true)} style={{ background:'rgba(239,68,68,0.15)',border:'1px solid rgba(239,68,68,0.3)',color:'rgb(252,165,165)',borderRadius:100,padding:'6px 12px',fontSize:12,fontWeight:700,cursor:'pointer' }}>SOS</button>
           <Link href="/profile" style={{ width:32,height:32,borderRadius:'50%',overflow:'hidden',background:C.grad,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontWeight:700,fontSize:12,textDecoration:'none',flexShrink:0 }}>
             {profile?.avatar_url
@@ -266,7 +266,7 @@ export default function AdoDashboard() {
               {[
                 { href:'/journal',         icon:'📔', label:'Journal' },
                 { href:'/challenges',      icon:'🎯', label:'Défis' },
-                { href:'/chat',            icon:'💬', label:'Chat IA' },
+                { href:'/messages',        icon:'💬', label:'Messages' },
                 { href:'/mediatheque',     icon:'📚', label:'Médiathèque' },
                 { href:'/trouver-un-pro',  icon:'🔍', label:'Trouver un pro' },
                 { href:'/motivation',      icon:'✨', label:'Motivation' },
@@ -355,7 +355,7 @@ export default function AdoDashboard() {
         {[
           { href:'/dashboard/ado', icon:'🏠', label:'Accueil' },
           { href:'/journal',       icon:'📔', label:'Journal' },
-          { href:'/chat',          icon:'💬', label:'Chat' },
+          { href:'/messages',      icon:'💬', label:'Messages' },
           { href:'/challenges',    icon:'🎯', label:'Défis' },
           { href:'/profile',       icon:'👤', label:'Profil' },
         ].map(item=>(

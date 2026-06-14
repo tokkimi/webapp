@@ -285,7 +285,10 @@ export default function ChallengesPage() {
 
   async function fetchChallenges() {
     try {
-      const res = await fetch('/api/challenges')
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/challenges', {
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
+      })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
         if (res.status === 500 || body?.code === '42P01') {
@@ -307,9 +310,13 @@ export default function ChallengesPage() {
     setSubmitting(true)
     setError(null)
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/challenges', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({ title: formTitle.trim(), description: formDesc.trim(), category: formCategory, target_date: formDate || null }),
       })
       if (!res.ok) {
@@ -347,7 +354,15 @@ export default function ChallengesPage() {
 
   async function handleCheckIn(id: string) {
     try {
-      const res = await fetch(`/api/challenges/${id}/checkin`, { method: 'POST' })
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/challenges', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+        body: JSON.stringify({ id, action: 'checkin' }),
+      })
       if (!res.ok) throw new Error()
       setChallenges(prev => prev.map(c => {
         if (c.id !== id) return c
@@ -360,7 +375,11 @@ export default function ChallengesPage() {
 
   async function handleDelete(id: string) {
     try {
-      const res = await fetch(`/api/challenges/${id}`, { method: 'DELETE' })
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`/api/challenges?id=${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
+      })
       if (!res.ok) throw new Error()
       setChallenges(prev => prev.filter(c => c.id !== id))
     } catch {
@@ -370,9 +389,13 @@ export default function ChallengesPage() {
 
   async function handleAddSuggestion(s: typeof SUGGESTIONS[0]) {
     try {
+      const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/challenges', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({ title: s.title, description: s.description, category: s.category, target_date: null }),
       })
       if (!res.ok) {

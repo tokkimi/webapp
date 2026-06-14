@@ -216,11 +216,17 @@ export default function ProfilePage() {
       body.price_max = priceMax ? parseInt(priceMax) : null
     }
     const { data: { session } } = await supabase.auth.getSession()
-    await fetch('/api/profile', {
+    const response = await fetch('/api/profile', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json', ...(session ? { Authorization: `Bearer ${session.access_token}` } : {}) },
       body: JSON.stringify(body),
     })
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({}))
+      setSavingProfil(false)
+      alert(result.error || 'Impossible de sauvegarder le profil.')
+      return
+    }
     if (birthDate && !birthDateLocked) setBirthDateLocked(true)
     setSavingProfil(false)
     setSavedProfil(true)
@@ -229,6 +235,29 @@ export default function ProfilePage() {
 
   async function handleApplyAvatar() {
     setAvatarUrl(avatarInput)
+    setShowAvatarInput(false)
+  }
+
+  async function handleAvatarUpload(file: File) {
+    if (!user) return
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La photo ne doit pas depasser 5 Mo.')
+      return
+    }
+    const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+    const path = `${user.id}/avatar.${extension}`
+    const { error } = await supabase.storage.from('avatars').upload(path, file, {
+      upsert: true,
+      contentType: file.type,
+    })
+    if (error) {
+      alert(error.message || 'Impossible d’envoyer la photo.')
+      return
+    }
+    const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+    const url = `${data.publicUrl}?v=${Date.now()}`
+    setAvatarUrl(url)
+    setAvatarInput(url)
     setShowAvatarInput(false)
   }
 
@@ -443,6 +472,14 @@ export default function ProfilePage() {
 
             {/* Nav items */}
             <nav style={{ flex: 1, padding: '16px 12px' }}>
+              <Link href="/appointments"
+                style={{ width: '100%', padding: '11px 16px', borderRadius: 10, color: '#64748B', fontSize: 14, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+                <span style={{ width: 4, height: 16 }} />Agenda
+              </Link>
+              <Link href="/messages"
+                style={{ width: '100%', padding: '11px 16px', borderRadius: 10, color: '#64748B', fontSize: 14, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+                <span style={{ width: 4, height: 16 }} />Messages
+              </Link>
               {ALL_TABS.map(tab => {
                 const active = activeTab === tab.id
                 return (
@@ -504,7 +541,7 @@ export default function ProfilePage() {
                         <button onClick={handleApplyAvatar} style={{ background: T, border: 'none', borderRadius: 8, color: '#fff', padding: '9px 18px', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>OK</button>
                       </div>
                       <p style={{ fontSize: 12, color: '#64748B', margin: '10px 0 6px' }}>Ou choisir un fichier :</p>
-                      <input ref={fileInputRef} type="file" accept="image/*" style={{ fontSize: 13, color: '#64748B' }} onChange={e => { const file = e.target.files?.[0]; if (file) { const url = URL.createObjectURL(file); setAvatarUrl(url); setAvatarInput(url); setShowAvatarInput(false) } }} />
+                      <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" style={{ fontSize: 13, color: '#64748B' }} onChange={e => { const file = e.target.files?.[0]; if (file) void handleAvatarUpload(file) }} />
                     </div>
                   )}
 

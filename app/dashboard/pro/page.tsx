@@ -114,6 +114,7 @@ export default function ProDashboard() {
         </Link>
         <div style={{ display:'flex',alignItems:'center',gap:8 }}>
           <Link href="/appointments" style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Agenda</Link>
+          <Link href="/messages" style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Messages</Link>
           <Link href="/patients"     style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Patients</Link>
           <Link href="/mediatheque"  style={{ fontSize:12,color:'#9ca3af',textDecoration:'none',fontWeight:500,padding:'6px 12px',borderRadius:100,border:'1px solid rgba(255,255,255,0.1)' }}>Médiathèque</Link>
           <Link href="/profile" style={{ width:32,height:32,borderRadius:'50%',overflow:'hidden',background:C.grad,display:'flex',alignItems:'center',justifyContent:'center',color:'#111',fontWeight:800,fontSize:12,textDecoration:'none',flexShrink:0 }}>

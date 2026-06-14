@@ -26,7 +26,7 @@ const ProfileIcon = () => (
 
 const icons: Record<string, () => React.ReactElement> = {
   '/': HomeIcon,
-  '/chat': ChatIcon,
+  '/messages': ChatIcon,
   '/profile': ProfileIcon,
 }
 
@@ -36,7 +36,7 @@ export default function BottomNav({ lang }: BottomNavProps) {
 
   const items = [
     { href: '/',        label: fr ? 'Accueil' : 'Home' },
-    { href: '/chat',    label: fr ? 'Discuter' : 'Chat' },
+    { href: '/messages', label: fr ? 'Messages' : 'Messages' },
     { href: '/profile', label: fr ? 'Profil'  : 'Profile' },
   ]
 

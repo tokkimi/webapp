@@ -7,12 +7,6 @@ import { createSupabaseBrowserClient } from '@/lib/supabase'
 const TEAL = '#30B4A7'
 const DARK_GREEN = '#082827'
 
-const PLACEHOLDERS = [
-  { id: 'p1', name: 'Dr. Sophie Martin',  specialty: 'Psychologue',      bio: 'Spécialisée en thérapies cognitivo-comportementales pour adolescents.' },
-  { id: 'p2', name: 'Dr. Karim Benali',   specialty: 'Psychothérapeute', bio: 'Approche humaniste et systémique, accompagnement familial.' },
-  { id: 'p3', name: 'Dr. Claire Dupont',  specialty: 'Psychiatre',       bio: 'Psychiatrie de l\'enfant et de l\'adolescent, bilans neuropsychologiques.' },
-]
-
 const SPECIALTIES = ['Toutes', 'Psychologue', 'Psychothérapeute', 'Psychiatre', 'Éducateur', 'Médecin']
 
 interface Pro {
@@ -21,6 +15,9 @@ interface Pro {
   specialty: string
   bio?: string
   avatar_url?: string
+  location?: string
+  rating?: number
+  rating_count?: number
 }
 
 function CheckIcon() {
@@ -60,10 +57,8 @@ export default function TrouverUnPro() {
   useEffect(() => {
     async function fetchPros() {
       const { data } = await supabase
-        .from('profiles')
-        .select('id, name, specialty, bio, avatar_url')
-        .eq('profile_type', 'pro')
-        .eq('verified', true)
+        .from('public_professionals')
+        .select('*')
       if (data && data.length > 0) {
         setPros(data)
       }
@@ -72,7 +67,7 @@ export default function TrouverUnPro() {
     fetchPros()
   }, []) // eslint-disable-line
 
-  const displayPros: Pro[] = loaded && pros.length > 0 ? pros : PLACEHOLDERS
+  const displayPros: Pro[] = pros
 
   const filtered = displayPros.filter(p => {
     const matchSearch = search === '' ||
@@ -81,10 +76,6 @@ export default function TrouverUnPro() {
     const matchSpecialty = specialty === 'Toutes' || p.specialty === specialty
     return matchSearch && matchSpecialty
   })
-
-  function openModal(name: string) {
-    setModal({ open: true, name })
-  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a', fontFamily: 'Inter, sans-serif', color: '#f3f4f6' }}>
@@ -190,9 +181,9 @@ export default function TrouverUnPro() {
                 )}
 
                 {/* Book button */}
-                <button className="book-btn" onClick={() => openModal(pro.name)}>
-                  Prendre rendez-vous
-                </button>
+                <Link className="book-btn" href={`/professionnels/${pro.id}`} style={{ display: 'block', textAlign: 'center', textDecoration: 'none' }}>
+                  Voir le profil
+                </Link>
               </div>
             ))}
           </div>
