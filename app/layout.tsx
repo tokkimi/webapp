@@ -22,12 +22,12 @@ export const metadata: Metadata = {
     'bien-être adolescent, santé mentale ado, psychologue ado, parents adolescent, journal intime ado, suivi humeur, capsule ado',
   authors: [{ name: 'Capsule Ado' }],
   creator: 'Capsule Ado',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://capsuleado.fr'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://webapp-chi-five-94.vercel.app'),
   openGraph: {
     title: 'Capsule Ado — Bien-être des adolescents',
     description:
       'La plateforme qui accompagne les ados, soutient les familles et connecte les professionnels du bien-être adolescent.',
-    url: 'https://capsuleado.fr',
+    url: process.env.NEXT_PUBLIC_APP_URL || 'https://webapp-chi-five-94.vercel.app',
     siteName: 'Capsule Ado',
     images: [
       {
@@ -67,7 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <meta name="theme-color" content="#7C3AED" />
+        <meta name="theme-color" content="#30B4A7" />
         <meta name="color-scheme" content="light" />
       </head>
       <body>{children}</body>
