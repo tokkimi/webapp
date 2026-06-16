@@ -1535,5 +1535,120 @@ var moonlingsEpisodes = [
         ]
       }
     ]
+  },
+  {
+    id: 21,
+    season: 2,
+    episodeNumber: 21,
+    title: "Café Chaos",
+    summary: "Les cinq Moonlings entrent dans leur café préféré pour commander une boisson chaude. Quand les boissons arrivent, tout le monde attrape le mauvais gobelet et une petite dispute éclate... jusqu'à ce qu'ils découvrent leurs prénoms écrits dessus et en rient ensemble.",
+    moral: "Un malentendu n'est jamais une raison de se fâcher pour longtemps — il suffit de regarder les choses de plus près.",
+    characters: ["Mochi", "Piri", "Pofu", "Zumu", "Gizo"],
+    scenes: [
+      {
+        id: "21-1",
+        location: "Entrée du Café",
+        characters: ["Mochi", "Piri", "Pofu", "Zumu", "Gizo"],
+        action: "Les cinq amis entrent ensemble dans le café des Moonlings, attirés par l'odeur chaude des boissons et des biscuits étoilés.",
+        dialogue: [
+          { character: "Zumu", text: "En route, en route, à toute vitesse vers le comptoir !" },
+          { character: "Mochi", text: "Doucement Zumu, on a le temps. Regardons ensemble le menu !" },
+          { character: "Pofu", text: "Tout va bien se passer, j'ai une super envie de chocolat chaud !" },
+          { character: "Gizo", text: "J'ai une idée : on commande chacun quelque chose de différent pour goûter à tout !" },
+          { character: "Piri", text: "J-je peux essayer le Galaxy Tea ? J'ai jamais osé avant..." }
+        ]
+      },
+      {
+        id: "21-2",
+        location: "Comptoir du Café",
+        characters: ["Mochi", "Piri", "Pofu", "Zumu", "Gizo"],
+        action: "Le grand ours barista prépare cinq gobelets en feutrine colorée, chacun avec une étoile cousue et un prénom écrit dessus, puis les pose sur le comptoir en bois.",
+        dialogue: [
+          { character: "Mochi", text: "Merci m'sieur l'ours ! Ça a l'air délicieux !" },
+          { character: "Zumu", text: "Lequel est pour moi ? Je veux le bleu, je veux le bleu !" },
+          { character: "Gizo", text: "Attendez, il y a un nom écrit sur chaque gobelet, regardons bien avant de prendre !" }
+        ]
+      },
+      {
+        id: "21-3",
+        location: "Comptoir du Café",
+        characters: ["Pofu", "Gizo"],
+        action: "Trop pressés, Pofu attrape le gobelet bleu de Zumu et Gizo attrape le gobelet jaune de Piri, sans regarder les prénoms.",
+        dialogue: [
+          { character: "Pofu", text: "Ouh, celui-ci sent trop bon, je le prends tout de suite !" },
+          { character: "Gizo", text: "Moi je prends le jaune, ça doit être pour moi, ça !" }
+        ]
+      },
+      {
+        id: "21-4",
+        location: "Table du Café",
+        characters: ["Mochi", "Piri", "Pofu", "Zumu", "Gizo"],
+        action: "Tout le monde s'assoit autour de la table ronde, prend une gorgée... et fait une drôle de grimace. Les boissons ne sont pas celles qu'ils attendaient.",
+        dialogue: [
+          { character: "Pofu", text: "Hum... c'est pas du chocolat chaud, ça pique un peu la langue !" },
+          { character: "Gizo", text: "Et ça, c'est censé être du thé ? On dirait du café bien trop fort !" },
+          { character: "Mochi", text: "Attendez... je crois qu'on n'a pas les bonnes boissons !" }
+        ]
+      },
+      {
+        id: "21-5",
+        location: "Table du Café",
+        characters: ["Zumu", "Piri"],
+        action: "Zumu réalise que son Comet Cocoa a disparu et regarde Pofu d'un air contrarié. Piri, elle, regarde Gizo avec son Galaxy Tea volé.",
+        dialogue: [
+          { character: "Zumu", text: "Pofu ! C'est MON cocoa que tu as pris, j'avais hâte de le boire !" },
+          { character: "Piri", text: "Et toi Gizo, c'était mon tout premier Galaxy Tea... je voulais vraiment l'essayer !" },
+          { character: "Zumu", text: "Ce n'est vraiment pas sympa, ça !" },
+          { character: "Piri", text: "Pas sympa du tout !" }
+        ]
+      },
+      {
+        id: "21-6",
+        location: "Table du Café",
+        characters: ["Mochi", "Piri", "Pofu", "Zumu", "Gizo"],
+        action: "Les bras croisés, Zumu et Piri font une mine fâchée pendant que Pofu et Gizo regardent leurs gobelets, gênés. Un silence un peu lourd s'installe.",
+        dialogue: [
+          { character: "Zumu", text: "On ne devrait pas se fâcher pour des boissons... mais quand même !" },
+          { character: "Piri", text: "C'est vrai, ça gâche un peu notre moment tous ensemble." },
+          { character: "Mochi", text: "Attendez, regardons ensemble plutôt que de se disputer. Il y a peut-être une explication !" }
+        ]
+      },
+      {
+        id: "21-7",
+        location: "Table du Café",
+        characters: ["Gizo", "Pofu", "Mochi"],
+        action: "Gizo se penche et remarque enfin les petites étiquettes en feutrine cousues sur chaque gobelet avec un prénom dessus. Il éclate de rire.",
+        dialogue: [
+          { character: "Gizo", text: "Oh non... regardez ! Il y a écrit \"Piri\" sur mon gobelet jaune !" },
+          { character: "Pofu", text: "Et sur le mien c'est écrit \"Zumu\" ! On a pris les mauvais sans faire attention !" },
+          { character: "Mochi", text: "J'ai une idée : on n'a qu'à se les échanger, tout simplement !" }
+        ]
+      },
+      {
+        id: "21-8",
+        location: "Table du Café",
+        characters: ["Mochi", "Piri", "Pofu", "Zumu", "Gizo"],
+        action: "Tout le monde échange les bons gobelets en riant de leur petite erreur. Les visages s'illuminent en retrouvant enfin leur vraie boisson.",
+        dialogue: [
+          { character: "Zumu", text: "Ah, voilà mon Comet Cocoa ! Merci Pofu, et désolé d'avoir grogné !" },
+          { character: "Piri", text: "Et voici mon Galaxy Tea... miam, j'adore ! Pas de rancune, Gizo !" },
+          { character: "Gizo", text: "Désolé tout le monde, la prochaine fois je lirai bien le prénom avant de foncer !" },
+          { character: "Pofu", text: "Tout va bien se passer, c'est même plus drôle comme ça, finalement !" }
+        ]
+      },
+      {
+        id: "21-9",
+        location: "Table du Café",
+        characters: ["Mochi", "Piri", "Pofu", "Zumu", "Gizo"],
+        action: "Les cinq amis lèvent leurs gobelets ensemble et les font tchin-tchin joyeusement au-dessus de la table, avec une assiette de biscuits en forme d'étoile entre eux.",
+        dialogue: [
+          { character: "Mochi", text: "Aux Moonlings, et à nos petites bêtises qui finissent toujours bien !" },
+          { character: "Piri", text: "J-je suis vraiment contente d'être avec vous tous !" },
+          { character: "Zumu", text: "À toute vitesse vers la prochaine aventure... mais en regardant bien les étiquettes !" },
+          { character: "Gizo", text: "J'ai une idée : on revient ici toutes les semaines !" },
+          { character: "Pofu", text: "Tout va bien se passer, surtout quand on est ensemble !" }
+        ]
+      }
+    ]
   }
 ];

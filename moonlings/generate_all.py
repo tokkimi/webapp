@@ -28,6 +28,7 @@ BG_COLORS = {
     "colline":  ("#040408", "#100424"),
     "riviere":  ("#061020", "#123048"),
     "maison":   ("#1a0618", "#30103a"),
+    "cafe":     ("#3a2615", "#6b4a2a"),
 }
 
 LOCATION_MAP = {
@@ -44,6 +45,8 @@ LOCATION_MAP = {
     "Village des Moonlings rénové": "village",
     "Buisson d'étoiles": "lac", "Chemin du Lac Étoilé": "lac",
     "Chemin du Lac": "lac",
+    "Café des Moonlings": "cafe", "Comptoir du Café": "cafe",
+    "Table du Café": "cafe", "Entrée du Café": "cafe",
 }
 
 try:
@@ -72,6 +75,28 @@ def make_bg(location, stars_seed=0):
         bl = int(t[2] + (b[2]-t[2]) * y/CANVAS_H)
         draw.line([(0,y),(CANVAS_W,y)], fill=(r,g,bl))
     rng = np.random.default_rng(stars_seed)
+
+    if key == "cafe":
+        # Warm hanging lights instead of stars, wooden counter line
+        n_lights = 10
+        xs = np.linspace(80, CANVAS_W-80, n_lights)
+        for x in xs:
+            y = 60 + int(15 * math.sin(x / 80))
+            for glow_r in range(26, 0, -4):
+                alpha = int(70 * glow_r / 26)
+                gc = Image.new("RGBA", (CANVAS_W, CANVAS_H), (0,0,0,0))
+                gd = ImageDraw.Draw(gc)
+                gd.ellipse([x-glow_r, y-glow_r, x+glow_r, y+glow_r], fill=(255,210,120,alpha))
+                img2 = Image.alpha_composite(img.convert("RGBA"), gc)
+                img = img2.convert("RGB")
+            draw = ImageDraw.Draw(img)
+            draw.ellipse([x-7, y-7, x+7, y+7], fill=(255,225,150))
+        # Counter / table line
+        counter_y = int(CANVAS_H * 0.72)
+        draw.rectangle([0, counter_y, CANVAS_W, CANVAS_H], fill=hex_rgb("#4a3018"))
+        draw.rectangle([0, counter_y, CANVAS_W, counter_y+6], fill=hex_rgb("#7a5530"))
+        return img.convert("RGBA")
+
     n_stars = 120
     xs = rng.integers(0, CANVAS_W, n_stars)
     ys = rng.integers(0, CANVAS_H*6//10, n_stars)
