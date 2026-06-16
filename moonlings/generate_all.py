@@ -97,82 +97,187 @@ def make_bg(location, stars_seed=0):
         draw.rectangle([0, counter_y, CANVAS_W, counter_y+6], fill=hex_rgb("#7a5530"))
         return img.convert("RGBA")
 
-    n_stars = 120
+    n_stars = 160
     xs = rng.integers(0, CANVAS_W, n_stars)
-    ys = rng.integers(0, CANVAS_H*6//10, n_stars)
+    ys = rng.integers(0, CANVAS_H*7//10, n_stars)
     for x, y in zip(xs, ys):
         bright = rng.integers(160, 255)
         sz = rng.integers(1, 3)
         draw.ellipse([x-sz, y-sz, x+sz, y+sz], fill=(bright, bright, bright))
+        if sz == 2:
+            draw.line([(x-4,y),(x+4,y)], fill=(bright,bright,bright,120))
+            draw.line([(x,y-4),(x,y+4)], fill=(bright,bright,bright,120))
     # Lune
-    moon_x, moon_y = CANVAS_W - 130, 80
+    moon_x, moon_y = CANVAS_W - 130, 90
+    glow = Image.new("RGBA", (CANVAS_W, CANVAS_H), (0,0,0,0))
+    gd = ImageDraw.Draw(glow)
+    gd.ellipse([moon_x-90, moon_y-90, moon_x+90, moon_y+90], fill=(255,240,180,40))
+    glow = glow.filter(__import__("PIL.ImageFilter", fromlist=["ImageFilter"]).GaussianBlur(20))
+    img = Image.alpha_composite(img.convert("RGBA"), glow).convert("RGB")
+    draw = ImageDraw.Draw(img)
     draw.ellipse([moon_x-45, moon_y-45, moon_x+45, moon_y+45], fill=(255,240,180))
     draw.ellipse([moon_x+12, moon_y-38, moon_x+58, moon_y+38], fill=t)  # crescent cutout
+
+    horizon_y = int(CANVAS_H * 0.74)
+    if key == "lac":
+        draw.rectangle([0, horizon_y, CANVAS_W, CANVAS_H], fill=hex_rgb("#0a2a55"))
+        for i in range(40):
+            ly = horizon_y + 10 + i*((CANVAS_H-horizon_y-10)//40)
+            lx = rng.integers(0, CANVAS_W)
+            lw = rng.integers(30, 90)
+            draw.line([(lx,ly),(lx+lw,ly)], fill=(180,210,255,60), width=2)
+        rdraw = ImageDraw.Draw(img, "RGBA")
+        rdraw.ellipse([moon_x-30, horizon_y+18, moon_x+30, horizon_y+38], fill=(255,240,180,90))
+    elif key == "foret":
+        draw.rectangle([0, horizon_y+30, CANVAS_W, CANVAS_H], fill=hex_rgb("#020a02"))
+        for i in range(14):
+            tx = int(CANVAS_W * i / 13) + rng.integers(-20,20)
+            th = rng.integers(80, 200)
+            tw = rng.integers(30, 60)
+            draw.polygon([(tx, horizon_y+40), (tx-tw, horizon_y+40+th), (tx+tw, horizon_y+40+th)],
+                         fill=hex_rgb("#0a200f"))
+            for _ in range(4):
+                fx = tx + rng.integers(-tw//2, tw//2)
+                fy = horizon_y + 40 + rng.integers(10, th)
+                draw.ellipse([fx-3,fy-3,fx+3,fy+3], fill=(255,225,120,200))
+    elif key == "village":
+        draw.rectangle([0, horizon_y+20, CANVAS_W, CANVAS_H], fill=hex_rgb("#0a0414"))
+        for i in range(6):
+            hx = 120 + i*200 + rng.integers(-30,30)
+            hw, hh = 70, rng.integers(60,110)
+            roof_c = hex_rgb("#3a1a4a")
+            wall_c = hex_rgb("#241038")
+            draw.polygon([(hx-hw//2-8, horizon_y+20), (hx, horizon_y+20-40), (hx+hw//2+8, horizon_y+20)], fill=roof_c)
+            draw.rectangle([hx-hw//2, horizon_y+20, hx+hw//2, horizon_y+20+hh], fill=wall_c)
+            draw.rectangle([hx-12, horizon_y+20+10, hx+12, horizon_y+20+30], fill=(255,225,150,200))
+    elif key == "colline":
+        draw.ellipse([-200, horizon_y, CANVAS_W*0.6, CANVAS_H+200], fill=hex_rgb("#0c0420"))
+        draw.ellipse([CANVAS_W*0.3, horizon_y+30, CANVAS_W+200, CANVAS_H+200], fill=hex_rgb("#150830"))
+    elif key == "riviere":
+        draw.rectangle([0, horizon_y, CANVAS_W, CANVAS_H], fill=hex_rgb("#0c2840"))
+        for i in range(30):
+            ly = horizon_y + rng.integers(0, CANVAS_H-horizon_y)
+            lx = rng.integers(0, CANVAS_W)
+            draw.line([(lx,ly),(lx+rng.integers(20,70),ly)], fill=(200,230,255,70), width=2)
+    elif key == "maison":
+        draw.rectangle([0, horizon_y-10, CANVAS_W, CANVAS_H], fill=hex_rgb("#1c0c2a"))
+        draw.rectangle([CANVAS_W*0.2, horizon_y-60, CANVAS_W*0.8, CANVAS_H], fill=hex_rgb("#28103a"))
+        draw.polygon([(CANVAS_W*0.15, horizon_y-60), (CANVAS_W*0.5, horizon_y-130), (CANVAS_W*0.85, horizon_y-60)],
+                     fill=hex_rgb("#3a1850"))
+        draw.rectangle([CANVAS_W*0.42, horizon_y+10, CANVAS_W*0.58, CANVAS_H], fill=hex_rgb("#160a20"))
+
     return img.convert("RGBA")
+
+
+def _shade(rgb, factor):
+    return tuple(max(0, min(255, int(c*factor))) for c in rgb)
 
 
 def make_char(name, size=200, bounce=0):
     fill, outline = CHAR_COLORS.get(name, ("#cccccc", "#aaaaaa"))
     fc = hex_rgb(fill)
     oc = hex_rgb(outline)
-    img = Image.new("RGBA", (size, size+bounce*2), (0,0,0,0))
-    draw = ImageDraw.Draw(img)
-    m = 12
+    light = _shade(fc, 1.25)
+    shadow = _shade(fc, 0.72)
+    pad = 70
+    W, H = size + pad, size + pad + bounce*2
+    img = Image.new("RGBA", (W, H), (0,0,0,0))
     y_off = bounce
-    # Body
-    draw.ellipse([m, m+y_off, size-m, size-m+y_off], fill=(*fc, 230), outline=(*oc, 255), width=4)
-    # Glow
-    glow = Image.new("RGBA", (size, size+bounce*2), (0,0,0,0))
-    gd = ImageDraw.Draw(glow)
-    for expand in range(15, 0, -3):
-        alpha = int(30 * expand / 15)
-        gd.ellipse([m-expand, m-expand+y_off, size-m+expand, size-m+expand+y_off],
-                   fill=(*fc, alpha))
-    img = Image.alpha_composite(glow, img)
+    cx = W // 2
+    body_top = 50 + y_off
+    body_bot = H - 30
+    body_w = size * 0.42
+
+    # Soft drop shadow on the ground
+    shadow_img = Image.new("RGBA", (W, H), (0,0,0,0))
+    sd = ImageDraw.Draw(shadow_img)
+    sd.ellipse([cx-body_w*0.8, body_bot-14, cx+body_w*0.8, body_bot+16], fill=(0,0,0,70))
+    shadow_img = shadow_img.filter(__import__("PIL.ImageFilter", fromlist=["ImageFilter"]).GaussianBlur(6))
+    img = Image.alpha_composite(img, shadow_img)
     draw = ImageDraw.Draw(img)
-    # Eyes
-    ey = m + (size-2*m)*2//5 + y_off
-    for ex in [size//3, 2*size//3]:
-        ew = size//9
-        draw.ellipse([ex-ew, ey-ew, ex+ew, ey+ew], fill=(20,20,50,255))
-        draw.ellipse([ex-ew//3, ey-ew//2, ex, ey-ew//6], fill=(255,255,255,200))
+
+    # Ears (drawn behind body) — shape differs per character
+    ear_h = size*0.22
+    if name == "gizo":
+        for ex in (cx-body_w*0.55, cx+body_w*0.55):
+            draw.rectangle([ex-9, body_top-ear_h+6, ex+9, body_top+14], fill=oc, outline=_shade(oc,0.7), width=2)
+            draw.ellipse([ex-12, body_top-ear_h-2, ex+12, body_top-ear_h+18], fill=light, outline=oc, width=2)
+    else:
+        for ex in (cx-body_w*0.62, cx+body_w*0.62):
+            draw.ellipse([ex-16, body_top-ear_h*0.8, ex+16, body_top+ear_h*0.5],
+                         fill=light, outline=oc, width=3)
+
+    # Stubby arms
+    arm_y = (body_top+body_bot)/2 + size*0.05
+    for ax, sign in [(cx-body_w*0.92, -1), (cx+body_w*0.92, 1)]:
+        draw.ellipse([ax-16, arm_y-14, ax+16, arm_y+14], fill=fc, outline=oc, width=3)
+
+    # Main body — soft rounded blob (wider at the bottom, plush feel)
+    body_box = [cx-body_w, body_top, cx+body_w, body_bot]
+    draw.ellipse(body_box, fill=fc, outline=oc, width=4)
+
+    # Belly highlight (top-left light source)
+    hl = Image.new("RGBA", (W, H), (0,0,0,0))
+    hd = ImageDraw.Draw(hl)
+    hd.ellipse([cx-body_w*0.55, body_top+body_w*0.15, cx+body_w*0.05, body_top+body_w*1.05],
+               fill=(*light, 90))
+    hl = hl.filter(__import__("PIL.ImageFilter", fromlist=["ImageFilter"]).GaussianBlur(10))
+    img = Image.alpha_composite(img, hl)
+    # Lower shadow for volume
+    sh = Image.new("RGBA", (W, H), (0,0,0,0))
+    shd = ImageDraw.Draw(sh)
+    shd.ellipse([cx-body_w*0.7, body_bot-body_w*0.7, cx+body_w*0.85, body_bot+10], fill=(*shadow, 70))
+    sh = sh.filter(__import__("PIL.ImageFilter", fromlist=["ImageFilter"]).GaussianBlur(14))
+    img = Image.alpha_composite(img, sh)
+    draw = ImageDraw.Draw(img)
+    draw.ellipse(body_box, outline=oc, width=4)
+
+    # Feet
+    foot_y = body_bot - 6
+    for fx in (cx-body_w*0.4, cx+body_w*0.4):
+        draw.ellipse([fx-15, foot_y-8, fx+15, foot_y+14], fill=_shade(fc,0.85), outline=oc, width=2)
+
+    # Eyes (big, expressive, with shine)
+    ey = body_top + (body_bot-body_top)*0.38
+    eye_w = size*0.11
+    for ex in (cx-size*0.16, cx+size*0.16):
+        draw.ellipse([ex-eye_w, ey-eye_w*1.15, ex+eye_w, ey+eye_w*1.15], fill=(255,255,255,255))
+        draw.ellipse([ex-eye_w*0.72, ey-eye_w*0.85, ex+eye_w*0.72, ey+eye_w*0.95], fill=(35,25,45,255))
+        draw.ellipse([ex-eye_w*0.28, ey-eye_w*0.75, ex+eye_w*0.05, ey-eye_w*0.25], fill=(255,255,255,230))
     # Cheeks
-    ck_y = ey + size//8
-    for ck_x in [size//4, 3*size//4]:
-        draw.ellipse([ck_x-14, ck_y-7, ck_x+14, ck_y+7], fill=(255,120,120,100))
+    ck_y = ey + size*0.14
+    for ck_x in (cx-size*0.26, cx+size*0.26):
+        draw.ellipse([ck_x-14, ck_y-8, ck_x+14, ck_y+8], fill=(255,140,140,90))
     # Smile
-    sm = size//4
-    draw.arc([sm, ey+size//10, size-sm, ey+size//4+y_off], start=0, end=180, fill=(80,30,30,200), width=3)
-    # Special details
+    sm_w = size*0.13
+    draw.arc([cx-sm_w, ey+size*0.10, cx+sm_w, ey+size*0.24], start=10, end=170,
+              fill=(90,50,50,220), width=4)
+
+    # Special accessories per character
     if name == "mochi":
-        star_cx, star_cy = size//2, size*2//3+y_off
-        star_pts = [(star_cx+int(18*math.cos(math.radians(a-90))),
-                     star_cy+int(18*math.sin(math.radians(a-90)))) for a in range(0,360,72)]
-        inner = [(star_cx+int(8*math.cos(math.radians(a-90))),
-                  star_cy+int(8*math.sin(math.radians(a-90)))) for a in range(36,396,72)]
-        pts = [p for pair in zip(star_pts, inner) for p in pair]
-        draw.polygon(pts, fill=(255,215,0,200))
+        scx, scy = cx, body_bot - size*0.22
+        pts_outer = [(scx+18*math.cos(math.radians(a-90)), scy+18*math.sin(math.radians(a-90))) for a in range(0,360,72)]
+        pts_inner = [(scx+7*math.cos(math.radians(a-90)), scy+7*math.sin(math.radians(a-90))) for a in range(36,396,72)]
+        pts = [p for pair in zip(pts_outer, pts_inner) for p in pair]
+        draw.polygon(pts, fill=(255,215,0,240), outline=(200,150,0,255))
     elif name == "piri":
-        pts = []
-        for a in range(0, 360, 72):
-            pts.append((size//2+int((size//2-m)*math.cos(math.radians(a-90))),
-                        size//2+int((size//2-m)*math.sin(math.radians(a-90)))+y_off))
-            pts.append((size//2+int((size//4)*math.cos(math.radians(a-54))),
-                        size//2+int((size//4)*math.sin(math.radians(a-54)))+y_off))
+        scx, scy = cx, body_bot - size*0.22
+        pts_outer = [(scx+16*math.cos(math.radians(a-90)), scy+16*math.sin(math.radians(a-90))) for a in range(0,360,72)]
+        pts_inner = [(scx+7*math.cos(math.radians(a-90)), scy+7*math.sin(math.radians(a-90))) for a in range(36,396,72)]
+        pts = [p for pair in zip(pts_outer, pts_inner) for p in pair]
+        draw.polygon(pts, fill=(255,255,255,160))
     elif name == "zumu":
-        tail_pts = [(size-m, size//2+y_off), (size+30, size//4+y_off),
-                    (size+60, size//2+y_off), (size+30, size*3//4+y_off)]
-        draw.polygon(tail_pts, fill=(*hex_rgb("#aaddff"), 180))
+        tail_pts = [(cx+body_w-6, (body_top+body_bot)/2), (cx+body_w+34, (body_top+body_bot)/2-22),
+                    (cx+body_w+58, (body_top+body_bot)/2), (cx+body_w+34, (body_top+body_bot)/2+22)]
+        draw.polygon(tail_pts, fill=(*hex_rgb("#cfeeff"), 200), outline=oc)
     elif name == "pofu":
-        for bx, by_ in [(size//4, m+y_off), (size//2, m-8+y_off), (3*size//4, m+y_off)]:
-            draw.ellipse([bx-16, by_-12, bx+16, by_+12], fill=(*fc, 180))
+        for bx, by_ in [(cx-size*0.2, body_top+6), (cx, body_top-6), (cx+size*0.2, body_top+6)]:
+            draw.ellipse([bx-18, by_-13, bx+18, by_+13], fill=fc, outline=oc, width=2)
     elif name == "gizo":
-        for gx in [m+4, size-m-4]:
-            for gy_offset in [-1, 1]:
-                gcy = size//3 + gy_offset*(size//6) + y_off
-                draw.rectangle([gx-5, gcy-12, gx+5, gcy+12], fill=(*oc, 200))
-    # Name label
-    draw.text((size//2, size-m+y_off), name.upper(), fill=(*oc, 220), font=FONT_SMALL, anchor="mm")
+        pouch_y = body_bot - size*0.18
+        draw.rounded_rectangle([cx-26, pouch_y-16, cx+26, pouch_y+16], radius=6,
+                                fill=_shade(fc,0.8), outline=oc, width=2)
+
     return img
 
 
