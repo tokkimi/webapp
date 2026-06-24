@@ -11,7 +11,7 @@ const CAUSES = [
   { slug: 'decouverte-ailleurs', name: "Découverte de l'ailleurs", icon: '✈️', goal: 5000, raised: 0, color: 'from-emerald-500 to-emerald-700', desc: "Le judo est une langue universelle. Partout où on pose un tatami, on se comprend." },
 ]
 
-const AMOUNTS = [10, 25, 50, 100, 250, 500]
+const AMOUNTS = [1, 10, 25, 50, 100, 250, 500]
 const IMPACTS: Record<number, string> = {
   10: "Finance une séance pour un jeune",
   50: "Finance un stage d'autodéfense",
@@ -234,8 +234,29 @@ export default function HomePage() {
                 {status === 'loading' ? 'Redirection...' : `Donner ${eff ? eff+' €' : ''} →`}
               </button>
               {status === 'error' && <p className="text-red-500 text-sm text-center">Une erreur est survenue.</p>}
-              <p className="text-xs text-gray-400 text-center">Paiement sécurisé par Stripe. 100% reversé au projet.</p>
+              <p className="text-xs text-gray-400 text-center">Paiement sécurisé. 100% reversé au projet.</p>
             </form>
+
+            {/* HelloAsso widget don */}
+            <div className="mt-8 border-t pt-8">
+              <p className="text-sm font-semibold text-gray-700 mb-4 text-center">Ou faites un don directement via HelloAsso</p>
+              <iframe
+                id="haWidgetDon"
+                allowTransparency={true}
+                scrolling="auto"
+                src="https://www.helloasso.com/associations/judo-club-panonnais/formulaires/1/widget"
+                style={{ width: '100%', height: '750px', border: 'none' }}
+                onLoad={() => {
+                  window.addEventListener('message', function(e) {
+                    const dataHeight = (e.data as { height?: number }).height
+                    const el = document.getElementById('haWidgetDon')
+                    if (dataHeight && el && dataHeight > parseFloat(el.style.height || '0')) {
+                      el.style.height = dataHeight + 'px'
+                    }
+                  })
+                }}
+              />
+            </div>
           </div>
         </div>
       </section>
