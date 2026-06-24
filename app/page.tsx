@@ -239,7 +239,6 @@ export default function HomePage() {
 
             {/* HelloAsso widget don */}
             <div className="mt-8 border-t pt-8">
-              <p className="text-sm font-semibold text-gray-700 mb-4 text-center">Ou faites un don directement via HelloAsso</p>
               <iframe
                 id="haWidgetDon"
                 allowTransparency={true}

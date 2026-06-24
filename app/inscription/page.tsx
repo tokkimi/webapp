@@ -222,68 +222,34 @@ function InscriptionForm() {
   )
 }
 
-function HelloAssoWidget() {
-  return (
-    <div>
-      <p className="text-sm text-gray-500 mb-4">Inscrivez-vous et réglez directement en ligne via HelloAsso :</p>
-      <iframe
-        id="haWidgetAdhesion"
-        allowTransparency={true}
-        scrolling="auto"
-        src="https://www.helloasso.com/associations/judo-club-panonnais/adhesions/adhesion-2026-2027-sport/widget"
-        style={{ width: '100%', height: '750px', border: 'none' }}
-        onLoad={() => {
-          window.addEventListener('message', function(e) {
-            const dataHeight = (e.data as { height?: number }).height
-            const el = document.getElementById('haWidgetAdhesion')
-            if (dataHeight && el && dataHeight > parseFloat(el.style.height || '0')) {
-              el.style.height = dataHeight + 'px'
-            }
-          })
-        }}
-      />
-    </div>
-  )
-}
-
-function InscriptionTabs() {
-  const [tab, setTab] = useState<'helloasso' | 'form'>('helloasso')
-  return (
-    <div>
-      <div className="flex gap-2 mb-6">
-        <button onClick={() => setTab('helloasso')}
-          className={`flex-1 py-3 rounded-xl border-2 font-semibold text-sm transition-colors ${tab === 'helloasso' ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
-          Payer en ligne (HelloAsso)
-        </button>
-        <button onClick={() => setTab('form')}
-          className={`flex-1 py-3 rounded-xl border-2 font-semibold text-sm transition-colors ${tab === 'form' ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}>
-          Régler sur place (virement / espèces)
-        </button>
-      </div>
-      {tab === 'helloasso' ? <HelloAssoWidget /> : (
-        <Suspense fallback={<div>Chargement...</div>}>
-          <InscriptionForm />
-        </Suspense>
-      )}
-    </div>
-  )
-}
-
 export default function InscriptionPage() {
   return (
     <>
       <section className="bg-gradient-to-br from-[#1e3a5f] to-[#0f1f33] text-white py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl md:text-4xl font-black mb-4">Inscription aux cours</h1>
-          <p className="text-gray-300">Rejoignez le Judo Club Panonnais. Payez en ligne via HelloAsso ou déposez votre dossier au club.</p>
+          <p className="text-gray-300">Rejoignez le Judo Club Panonnais. Remplissez le formulaire ci-dessous pour vous inscrire.</p>
         </div>
       </section>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2">
-            <Suspense fallback={<div>Chargement...</div>}>
-              <InscriptionTabs />
-            </Suspense>
+            <iframe
+              id="haWidgetAdhesion"
+              allowTransparency={true}
+              scrolling="auto"
+              src="https://www.helloasso.com/associations/judo-club-panonnais/adhesions/adhesion-2026-2027-sport/widget"
+              style={{ width: '100%', height: '750px', border: 'none' }}
+              onLoad={() => {
+                window.addEventListener('message', function(e) {
+                  const dataHeight = (e.data as { height?: number }).height
+                  const el = document.getElementById('haWidgetAdhesion')
+                  if (dataHeight && el && dataHeight > parseFloat(el.style.height || '0')) {
+                    el.style.height = dataHeight + 'px'
+                  }
+                })
+              }}
+            />
           </div>
           <div className="space-y-4">
             <div className="card p-6">
