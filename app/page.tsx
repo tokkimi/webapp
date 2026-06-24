@@ -179,7 +179,7 @@ export default function HomePage() {
               {/* Montant */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">Montant de votre don</label>
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-3">
+                <div className="flex flex-wrap gap-2 mb-3">
                   {AMOUNTS.map(a => (
                     <button key={a} type="button" onClick={() => { setAmount(a); setCustom('') }}
                       className={`py-2.5 rounded-xl border-2 font-semibold text-sm transition-all ${amount === a && !custom ? 'border-orange-500 bg-orange-500 text-white' : 'border-gray-200 text-gray-600 hover:border-orange-300'}`}>
