@@ -13,6 +13,8 @@ type ProfileType = 'ado' | 'parent' | 'pro' | null
 
 type Tab =
   | 'profil'
+  | 'agenda'
+  | 'messages'
   | 'confidentialite'
   | 'notifications'
   | 'public'
@@ -372,6 +374,8 @@ export default function ProfilePage() {
 
   const ALL_TABS = ([
     { id: 'profil' as Tab,          label: 'Mon profil',    show: true },
+    { id: 'agenda' as Tab,          label: 'Agenda',        show: true },
+    { id: 'messages' as Tab,        label: 'Messages',      show: true },
     { id: 'confidentialite' as Tab, label: 'Confidentialité', show: profileType === 'ado' },
     { id: 'notifications' as Tab,   label: 'Notifications', show: true },
     { id: 'public' as Tab,          label: 'Profil public', show: profileType === 'pro' },
@@ -719,6 +723,50 @@ export default function ProfilePage() {
                 <button onClick={handleSaveProfil} disabled={savingProfil} style={saveBtn(savingProfil, savedProfil)}>
                   {savingProfil ? <span style={spinner} /> : savedProfil ? 'Enregistré !' : 'Enregistrer les modifications'}
                 </button>
+              </div>
+            )}
+
+            {/* ── Tab: Agenda ── */}
+            {activeTab === 'agenda' && (
+              <div className="fade-in">
+                <div style={{ marginBottom: 24 }}>
+                  <h1 style={{ fontSize: 24, fontWeight: 700, color: DARK, margin: 0, marginBottom: 6, fontFamily: 'Outfit,sans-serif' }}>Mon agenda</h1>
+                  <p style={{ color: '#64748B', margin: 0, fontSize: 14 }}>Tes rendez-vous avec des professionnels.</p>
+                </div>
+                <div style={card}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <p style={sectionLabel}>Rendez-vous à venir</p>
+                    <Link href="/trouver-un-pro" style={{ fontSize: 13, color: T, fontWeight: 700, textDecoration: 'none', background: `${T}14`, border: `1px solid ${T}33`, borderRadius: 100, padding: '6px 14px' }}>
+                      + Trouver un pro
+                    </Link>
+                  </div>
+                  <div style={{ textAlign: 'center', padding: '32px 0', color: '#9ca3af' }}>
+                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style={{ marginBottom: 12, opacity: 0.4 }}><rect x="6" y="12" width="36" height="30" rx="4" stroke="#9ca3af" strokeWidth="2"/><path d="M6 20h36M16 6v8M32 6v8" stroke="#9ca3af" strokeWidth="2" strokeLinecap="round"/></svg>
+                    <p style={{ margin: 0, fontSize: 14 }}>Aucun rendez-vous pour l'instant.</p>
+                    <p style={{ margin: '4px 0 0', fontSize: 12 }}>Prends rendez-vous avec un professionnel depuis "Trouver un pro".</p>
+                  </div>
+                </div>
+                <Link href="/appointments" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: T, color: '#fff', fontWeight: 700, fontSize: 14, padding: '14px 0', borderRadius: 14, textDecoration: 'none', marginTop: 4 }}>
+                  Voir tous mes rendez-vous
+                </Link>
+              </div>
+            )}
+
+            {/* ── Tab: Messages ── */}
+            {activeTab === 'messages' && (
+              <div className="fade-in">
+                <div style={{ marginBottom: 24 }}>
+                  <h1 style={{ fontSize: 24, fontWeight: 700, color: DARK, margin: 0, marginBottom: 6, fontFamily: 'Outfit,sans-serif' }}>Messages</h1>
+                  <p style={{ color: '#64748B', margin: 0, fontSize: 14 }}>Tes conversations avec des professionnels et la communauté Capsule.</p>
+                </div>
+                <div style={card}>
+                  <p style={sectionLabel}>Conversations</p>
+                  <div style={{ textAlign: 'center', padding: '40px 0', color: '#9ca3af' }}>
+                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" style={{ marginBottom: 12, opacity: 0.4 }}><path d="M8 10h32a2 2 0 012 2v20a2 2 0 01-2 2H16l-8 6V12a2 2 0 012-2z" stroke="#9ca3af" strokeWidth="2" strokeLinejoin="round"/></svg>
+                    <p style={{ margin: 0, fontSize: 14 }}>La messagerie arrive bientôt.</p>
+                    <p style={{ margin: '6px 0 0', fontSize: 12 }}>Tu pourras échanger directement avec tes professionnels et d'autres membres Capsule.</p>
+                  </div>
+                </div>
               </div>
             )}
 
