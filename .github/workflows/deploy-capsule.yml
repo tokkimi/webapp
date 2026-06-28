@@ -21,45 +21,48 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
-      - name: Set Supabase env vars on Vercel project
+      - name: Set env vars on Vercel project
         run: |
-          echo "https://ctyrpbkicfswuabmuqxc.supabase.co" | vercel env add NEXT_PUBLIC_SUPABASE_URL production --token=$VERCEL_TOKEN --force 2>/dev/null || true
-          echo "https://ctyrpbkicfswuabmuqxc.supabase.co" | vercel env add NEXT_PUBLIC_SUPABASE_URL preview --token=$VERCEL_TOKEN --force 2>/dev/null || true
-          echo "sb_publishable_GWLgJZXC6_3AXl2HtVKuOQ_OOvAKORX" | vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production --token=$VERCEL_TOKEN --force 2>/dev/null || true
-          echo "sb_publishable_GWLgJZXC6_3AXl2HtVKuOQ_OOvAKORX" | vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY preview --token=$VERCEL_TOKEN --force 2>/dev/null || true
-
-      - name: Set Anthropic API key on Vercel
-        run: |
+          set_env() { echo "$2" | vercel env add "$1" production --token=$VERCEL_TOKEN --force 2>/dev/null || true; }
+          set_env NEXT_PUBLIC_SUPABASE_URL "https://ctyrpbkicfswuabmuqxc.supabase.co"
+          set_env NEXT_PUBLIC_SUPABASE_ANON_KEY "sb_publishable_GWLgJZXC6_3AXl2HtVKuOQ_OOvAKORX"
           if [ -n "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
-            echo "${{ secrets.ANTHROPIC_API_KEY }}" | vercel env add ANTHROPIC_API_KEY production --token=$VERCEL_TOKEN --force 2>/dev/null || true
-            echo "${{ secrets.ANTHROPIC_API_KEY }}" | vercel env add ANTHROPIC_API_KEY preview --token=$VERCEL_TOKEN --force 2>/dev/null || true
+            set_env ANTHROPIC_API_KEY "${{ secrets.ANTHROPIC_API_KEY }}"
+          fi
+          if [ -n "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" ]; then
+            set_env SUPABASE_SERVICE_ROLE_KEY "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
           fi
 
-      - name: Apply SQL schema to Supabase
+      - name: Apply SQL schema via Supabase Management API
         env:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
-            echo "SUPABASE_SERVICE_ROLE_KEY not set, skipping schema migration"
-            exit 0
-          fi
+          PROJECT_REF="ctyrpbkicfswuabmuqxc"
           SUPA_URL="https://ctyrpbkicfswuabmuqxc.supabase.co"
-          # Apply schema via Supabase REST (exec_sql RPC must exist, or use pg endpoint)
-          # Use the Management API approach: POST to /rest/v1/rpc/exec_sql won't work without the function
-          # Instead apply each CREATE TABLE via direct SQL using service_role key with pg endpoint
-          apply_sql() {
+
+          # Try Management API first (needs SUPABASE_ACCESS_TOKEN personal access token)
+          if [ -n "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "Applying schema via Supabase Management API..."
+            SCHEMA=$(cat supabase/schema.sql | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
+            RESULT=$(curl -s -o /tmp/schema_result.json -w "%{http_code}" \
+              -X POST "https://api.supabase.com/v1/projects/$PROJECT_REF/database/query" \
+              -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"query\": $SCHEMA}")
+            echo "Management API response: $RESULT"
+            cat /tmp/schema_result.json
+          elif [ -n "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "Trying exec_sql RPC with service role key..."
+            SCHEMA=$(cat supabase/schema.sql | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
             curl -s -X POST "$SUPA_URL/rest/v1/rpc/exec_sql" \
               -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
               -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
               -H "Content-Type: application/json" \
-              -d "{\"sql\": $(echo "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')}" \
-              2>/dev/null || true
-          }
-          # Read and apply schema
-          SCHEMA=$(cat supabase/schema.sql)
-          echo "Applying schema via Supabase..."
-          apply_sql "$SCHEMA"
-          echo "Schema migration step complete."
+              -d "{\"sql\": $SCHEMA}" || true
+          else
+            echo "No Supabase credentials for DDL — schema must be applied manually in Supabase SQL Editor"
+          fi
 
       - name: Create test accounts in Supabase
         run: |
@@ -78,8 +81,22 @@ jobs:
           create_user "test-pro@capsule.app"    "Capsule2026!" "Dr. Thomas" "pro"
 
       - name: Deploy to Vercel (Capsule)
+        id: deploy
         run: |
           vercel pull --yes --environment=production --token=$VERCEL_TOKEN
           vercel build --prod --token=$VERCEL_TOKEN
           URL=$(vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN)
           echo "Deployed Capsule to: $URL"
+          echo "deploy_url=$URL" >> $GITHUB_OUTPUT
+
+      - name: Bootstrap database via deployed API
+        run: |
+          DEPLOY_URL="${{ steps.deploy.outputs.deploy_url }}"
+          if [ -z "$DEPLOY_URL" ]; then
+            DEPLOY_URL="https://webapp-chi-five-94.vercel.app"
+          fi
+          echo "Calling setup-db on $DEPLOY_URL..."
+          sleep 10
+          curl -s -X POST "$DEPLOY_URL/api/setup-db" \
+            -H "Content-Type: application/json" \
+            --max-time 30 | python3 -c "import json,sys; d=json.load(sys.stdin); print(json.dumps(d, indent=2))" 2>/dev/null || echo "setup-db call done (may need service key on Vercel)"
