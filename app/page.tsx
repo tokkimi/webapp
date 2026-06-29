@@ -20,6 +20,8 @@ const IMPACTS: Record<number, string> = {
   500: "Finance une action complète",
 }
 
+const HA_DON_URL = 'https://www.helloasso.com/associations/judo-club-panonnais/formulaires/1'
+
 export default function HomePage() {
   const [causes, setCauses] = useState(CAUSES)
   const [sorted, setSorted] = useState(CAUSES)
@@ -31,7 +33,6 @@ export default function HomePage() {
   const [msg, setMsg] = useState('')
   const [anon, setAnon] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('card')
-  const [status, setStatus] = useState<'idle'|'loading'|'error'>('idle')
 
   useEffect(() => {
     fetch('/api/causes').then(r => r.json()).then(d => {
@@ -49,20 +50,10 @@ export default function HomePage() {
   const eff = custom ? parseInt(custom) || 0 : amount
   const impactKey = [500, 250, 100, 50, 10].find(k => eff >= k)
 
-  async function donate(e: React.FormEvent) {
+  function donate(e: React.FormEvent) {
     e.preventDefault()
     if (!eff || eff < 1) return
-    setStatus('loading')
-    try {
-      const res = await fetch('/api/donations/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: eff * 100, cause_slug: selCause || null, donor_name: anon ? 'Anonyme' : name, donor_email: email, message: msg, anonymous: anon, payment_method: paymentMethod }),
-      })
-      const d = await res.json()
-      if (d.url) window.location.href = d.url
-      else setStatus('error')
-    } catch { setStatus('error') }
+    window.open(HA_DON_URL, '_blank')
   }
 
   return (
@@ -229,33 +220,12 @@ export default function HomePage() {
 
               <textarea value={msg} onChange={e => setMsg(e.target.value)} placeholder="Un message pour le club ? (optionnel)" rows={3} className="input-field resize-none" />
 
-              <button type="submit" disabled={!eff || eff < 1 || status === 'loading'}
+              <button type="submit" disabled={!eff || eff < 1}
                 className="btn-primary w-full py-4 text-base disabled:opacity-50 disabled:cursor-not-allowed">
-                {status === 'loading' ? 'Redirection...' : `Donner ${eff ? eff+' €' : ''} →`}
+                {`Donner ${eff ? eff+' €' : ''} →`}
               </button>
-              {status === 'error' && <p className="text-red-500 text-sm text-center">Une erreur est survenue.</p>}
-              <p className="text-xs text-gray-400 text-center">Paiement sécurisé. 100% reversé au projet.</p>
+              <p className="text-xs text-gray-400 text-center">Paiement sécurisé par HelloAsso. 100% reversé au projet.</p>
             </form>
-
-            {/* HelloAsso widget don */}
-            <div className="mt-8 border-t pt-8">
-              <iframe
-                id="haWidgetDon"
-                allowTransparency={true}
-                scrolling="auto"
-                src="https://www.helloasso.com/associations/judo-club-panonnais/formulaires/1/widget"
-                style={{ width: '100%', height: '750px', border: 'none' }}
-                onLoad={() => {
-                  window.addEventListener('message', function(e) {
-                    const dataHeight = (e.data as { height?: number }).height
-                    const el = document.getElementById('haWidgetDon')
-                    if (dataHeight && el && dataHeight > parseFloat(el.style.height || '0')) {
-                      el.style.height = dataHeight + 'px'
-                    }
-                  })
-                }}
-              />
-            </div>
           </div>
         </div>
       </section>
