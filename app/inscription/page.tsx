@@ -284,6 +284,37 @@ export default function InscriptionPage() {
                 })
               }}
             />
+
+            {/* Documents médicaux FFJDA */}
+            <div className="mt-8 card p-6">
+              <h3 className="font-bold text-[#1e3a5f] text-lg mb-4">Documents médicaux obligatoires</h3>
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-800 mb-4">
+                <p className="font-semibold mb-1">Conformément au décret n° 2021-564 du 7 mai 2021 :</p>
+                <p>L'inscription nécessite un <strong>questionnaire de santé</strong> ou un <strong>certificat médical de non contre-indication</strong> à la pratique du judo, à apporter lors de votre première séance.</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <a href="/docs/questionnaire-sante-ffjda.pdf" download
+                  className="flex items-center gap-2 px-4 py-3 border-2 border-[#1e3a5f] text-[#1e3a5f] rounded-xl text-sm font-semibold hover:bg-[#1e3a5f] hover:text-white transition-colors">
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Questionnaire de santé FFJDA
+                </a>
+                <a href="/docs/attestation-medicale-ffjda.pdf" download
+                  className="flex items-center gap-2 px-4 py-3 border-2 border-[#1e3a5f] text-[#1e3a5f] rounded-xl text-sm font-semibold hover:bg-[#1e3a5f] hover:text-white transition-colors">
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Attestation médicale FFJDA
+                </a>
+              </div>
+            </div>
+
+            {/* Droit à l'image */}
+            <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700">
+              <p className="font-semibold mb-1">Droit à l'image</p>
+              <p>En vous inscrivant, vous autorisez le Judo Club Panonnais à utiliser votre image (photographies et vidéos prises lors des activités du club) à des fins de communication non commerciale (site internet, réseaux sociaux, presse locale), <strong>pour une période de 5 ans</strong>. Vous pouvez retirer cette autorisation à tout moment par écrit.</p>
+            </div>
           </div>
           <div className="space-y-4">
             <div className="card p-6">
