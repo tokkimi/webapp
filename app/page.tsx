@@ -190,10 +190,10 @@ export default function HomePage() {
               {/* Montant */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">Montant de votre don</label>
-                <div className="flex flex-wrap gap-2 mb-3">
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-3">
                   {AMOUNTS.map(a => (
                     <button key={a} type="button" onClick={() => { setAmount(a); setCustom('') }}
-                      className={`py-2.5 rounded-xl border-2 font-semibold text-sm transition-all ${amount === a && !custom ? 'border-orange-500 bg-orange-500 text-white' : 'border-gray-200 text-gray-600 hover:border-orange-300'}`}>
+                      className={`py-2.5 rounded-xl border-2 font-semibold text-sm transition-all ${amount === a && !custom ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-gray-200 text-gray-600 hover:border-orange-300'}`}>
                       {a} €
                     </button>
                   ))}
@@ -203,8 +203,15 @@ export default function HomePage() {
                     placeholder="Autre montant" min="1" className="input-field pr-10" />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">€</span>
                 </div>
-                {eff >= 10 && impactKey && <p className="text-sm text-green-600 mt-2 font-medium">{IMPACTS[impactKey]}</p>}
-                {eff >= 10 && <p className="text-xs text-blue-600 mt-1">Avantage fiscal : {Math.round(eff*0.66)} € remboursés (66% pour les particuliers)</p>}
+                {eff >= 10 && impactKey && (
+                  <div className="mt-3 flex items-start gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <span className="text-emerald-500 text-lg leading-none mt-0.5">✦</span>
+                    <div>
+                      <p className="text-sm font-semibold text-emerald-700">{IMPACTS[impactKey]}</p>
+                      <p className="text-xs text-emerald-600 mt-0.5">Avantage fiscal : {Math.round(eff*0.66)} € remboursés · 66% déductible</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Identité */}
@@ -246,6 +253,27 @@ export default function HomePage() {
               </button>
               <p className="text-xs text-gray-400 text-center">Paiement sécurisé par HelloAsso. 100% reversé au projet.</p>
             </form>
+
+            {/* HelloAsso widget don */}
+            <div className="mt-8 border-t pt-8">
+              <p className="text-sm font-semibold text-gray-700 mb-4 text-center">Ou faites un don directement via HelloAsso</p>
+              <iframe
+                id="haWidgetDon"
+                allowTransparency={true}
+                scrolling="auto"
+                src="https://www.helloasso.com/associations/judo-club-panonnais/formulaires/1/widget"
+                style={{ width: '100%', height: '750px', border: 'none' }}
+                onLoad={() => {
+                  window.addEventListener('message', function(e) {
+                    const dataHeight = (e.data as { height?: number }).height
+                    const el = document.getElementById('haWidgetDon')
+                    if (dataHeight && el && dataHeight > parseFloat(el.style.height || '0')) {
+                      el.style.height = dataHeight + 'px'
+                    }
+                  })
+                }}
+              />
+            </div>
           </div>
         </div>
       </section>
