@@ -25,7 +25,8 @@ const HA_DON_URL = 'https://www.helloasso.com/associations/judo-club-panonnais/f
 export default function HomePage() {
   const [causes, setCauses] = useState(CAUSES)
   const [sorted, setSorted] = useState(CAUSES)
-  const [selCause, setSelCause] = useState('')
+  const [votes, setVotes] = useState<Record<string, number>>({})
+  const [voted, setVoted] = useState<string | null>(null)
   const [amount, setAmount] = useState<number>(0)
   const [custom, setCustom] = useState('')
   const [name, setName] = useState('')
@@ -33,6 +34,7 @@ export default function HomePage() {
   const [msg, setMsg] = useState('')
   const [anon, setAnon] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('card')
+  const [selCause, setSelCause] = useState('')
 
   useEffect(() => {
     fetch('/api/causes').then(r => r.json()).then(d => {
@@ -102,7 +104,7 @@ export default function HomePage() {
       <section className="bg-orange-500 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-white text-center">
-            {[['Affilié FFJDA','Fédération Française de Judo'],['Bras Panon','Est de La Réunion'],['Loi 1901','Association officielle'],['100%','Reversé aux projets']].map(([t,s]) => (
+            {[['Affilié FFJDA','Fédération Française de Judo'],['Bras Panon','Est de La Réunion'],['Association loi 1901',''],['100%','Reversé aux projets']].map(([t,s]) => (
               <div key={t}><div className="font-bold">{t}</div><div className="text-orange-100 text-xs">{s}</div></div>
             ))}
           </div>
@@ -113,34 +115,52 @@ export default function HomePage() {
       <section id="causes" className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-black text-[#1e3a5f] mb-4">Classement en direct des causes</h2>
-            <p className="text-gray-500 max-w-xl mx-auto">Chaque don est fléché vers la cause choisie. Classement mis à jour en temps réel.</p>
+            <h2 className="text-3xl md:text-4xl font-black text-[#1e3a5f] mb-4">Soutenir nos causes</h2>
+            <p className="text-gray-500 max-w-xl mx-auto">Votez pour la cause qui vous tient à cœur. Les votes orientent nos priorités d'action.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {sorted.map((c, idx) => {
-              const pct = Math.min(100, c.goal > 0 ? Math.round((c.raised / c.goal) * 100) : 0)
+              const totalVotes = Object.values(votes).reduce((a, b) => a + b, 0)
+              const causeVotes = votes[c.slug] || 0
+              const votesPct = totalVotes > 0 ? Math.round((causeVotes / totalVotes) * 100) : 0
+              const hasVoted = voted !== null
+              const isMyVote = voted === c.slug
               return (
-                <Link href={`/causes/${c.slug}`} key={c.slug} className="card p-6 hover:-translate-y-1 transition-all duration-300 group">
+                <div key={c.slug} className="card p-6 hover:-translate-y-1 transition-all duration-300 group">
                   <div className="flex items-start justify-between mb-4">
                     <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${c.color} flex items-center justify-center text-2xl`}>{c.icon}</div>
-                    <span className="text-3xl font-black text-gray-100 group-hover:text-gray-200">#{idx+1}</span>
+                    <span className="text-3xl font-black text-gray-100">#{idx+1}</span>
                   </div>
-                  <h3 className="font-bold text-gray-900 mb-2 text-lg group-hover:text-orange-500 transition-colors">{c.name}</h3>
+                  <h3 className="font-bold text-gray-900 mb-2 text-lg">{c.name}</h3>
                   <p className="text-gray-500 text-sm mb-4 line-clamp-2">{c.desc}</p>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="font-semibold text-gray-700">{c.raised.toLocaleString('fr-FR')} € collectés</span>
+                  {hasVoted && (
+                    <div className="space-y-1 mb-3">
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>{causeVotes} vote{causeVotes !== 1 ? 's' : ''}</span>
+                        <span>{votesPct}%</span>
+                      </div>
+                      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className={`h-full bg-gradient-to-r ${c.color} rounded-full transition-all duration-500`} style={{ width: `${votesPct}%` }} />
+                      </div>
                     </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className={`h-full bg-gradient-to-r ${c.color} rounded-full`} style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (hasVoted) return
+                      setVoted(c.slug)
+                      setVotes(v => ({ ...v, [c.slug]: (v[c.slug] || 0) + 1 }))
+                    }}
+                    disabled={hasVoted}
+                    className={`w-full py-2 rounded-xl font-semibold text-sm transition-all ${isMyVote ? `bg-gradient-to-r ${c.color} text-white` : hasVoted ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : `border-2 border-gray-200 text-gray-600 hover:border-orange-400 hover:text-orange-500`}`}>
+                    {isMyVote ? '✓ Votre vote' : hasVoted ? 'Vote enregistré' : 'Voter pour cette cause'}
+                  </button>
+                  <Link href={`/causes/${c.slug}`} className="block text-center text-xs text-orange-500 hover:underline mt-2">En savoir plus →</Link>
+                </div>
               )
             })}
           </div>
           <div className="text-center">
-            <Link href="#don" className="btn-primary">Soutenir une cause →</Link>
+            <Link href="#don" className="btn-primary">Faire un don →</Link>
           </div>
         </div>
       </section>
@@ -279,36 +299,6 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* GALERIE VIDÉOS */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-black text-[#1e3a5f] mb-4">Le club en action</h2>
-            <p className="text-gray-500">Revivez l'ambiance de nos entraînements sur les tatamis de Bras Panon</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { src: '/media/videos/jcp-projection.mp4', poster: '/media/photos/thumb-projection.jpg', label: 'Technique de projection — Seniors' },
-              { src: '/media/videos/jcp-tatami.mp4', poster: '/media/photos/thumb-tatami.jpg', label: 'Combat au sol (ne-waza) — Entraînement' },
-              { src: '/media/videos/jcp-enfants.mp4', poster: '/media/photos/thumb-enfants.jpg', label: 'Baby Judo & Mini Poussins' },
-            ].map((v, i) => (
-              <div key={i} className="rounded-2xl overflow-hidden shadow-lg bg-black group">
-                <video src={v.src} poster={v.poster} controls playsInline preload="metadata"
-                  className="w-full aspect-[9/16] object-cover">
-                  <source src={v.src} type="video/mp4" />
-                </video>
-                <div className="p-4 bg-gray-50">
-                  <p className="text-sm font-semibold text-[#1e3a5f]">{v.label}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="text-center mt-8">
-            <Link href="/presse" className="btn-secondary">Voir toutes les photos & vidéos →</Link>
           </div>
         </div>
       </section>

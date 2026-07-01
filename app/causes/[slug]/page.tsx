@@ -14,13 +14,13 @@ const CAUSES_DATA: Record<string, {
     description: 'Le judo comme cadre disciplinaire positif, lieu d\'appartenance et vecteur de confiance en soi. Bras Panon est une commune de l\'Est réunionnais, territoire de vie où se côtoient des réalités sociales que notre club ne peut pas ignorer : des jeunes en décrochage, des familles fragilisées. En tant qu\'acteur local enraciné, notre club a la responsabilité — et la capacité — d\'agir.',
     actions: [
       'Cours gratuits ou à tarif symbolique pour jeunes en difficulté ou signalés par les services sociaux',
-      'Partenariat avec les éducateurs spécialisés, la PJJ et les mairies',
+      'Orientées par les partenaires conventionnés et institutionnels du territoire',
       'Programme de tutorat sportif et de suivi individuel',
       'Passeport sportif vers la réinsertion : engagement, responsabilisation, projet de vie',
       'Sorties et activités citoyennes complémentaires',
     ],
     budget: 3500,
-    impact: ['10 jeunes en rupture accompagnés par saison', 'Cours hebdomadaires gratuits', 'Suivi individualisé par éducateur sportif', 'Partenariat PJJ actif'],
+    impact: ['10 jeunes en rupture accompagnés par saison', 'Cours hebdomadaires gratuits', 'Suivi individualisé par éducateur sportif', 'Partenariats'],
   },
   'perseverance-scolaire': {
     name: 'Persévérance scolaire',
@@ -30,12 +30,12 @@ const CAUSES_DATA: Record<string, {
     actions: [
       'Charte sport-école avec les établissements scolaires de la commune',
       'Ateliers concentration, gestion du stress et confiance en soi',
-      'Suivi régulier des résultats scolaires des adhérents',
+      'Accompagnement et suivi du parcours scolaire des bénéficiaires',
       'Récompense du mérite scolaire au sein du club (cérémonies, distinctions)',
       'Sensibilisation des familles à l\'importance de l\'engagement scolaire',
     ],
     budget: 2800,
-    impact: ['Charte signée avec 3 établissements scolaires', 'Ateliers mensuels de gestion du stress', 'Suivi des bulletins scolaires', 'Cérémonie annuelle de remise des prix'],
+    impact: ['Conventionnement avec des établissements scolaires du territoire', 'Ateliers mensuels de gestion du stress', 'Suivi des bulletins scolaires', 'Cérémonie annuelle de remise des prix'],
   },
   'inclusion-autisme': {
     name: 'Inclusion autisme et sport',
@@ -45,12 +45,12 @@ const CAUSES_DATA: Record<string, {
     actions: [
       'Créneaux dédiés avec enseignants formés aux troubles du spectre autistique (TSA)',
       'Adaptation du programme aux profils sensoriels et cognitifs',
-      'Lien étroit avec les familles, orthophonistes et équipes médico-sociales',
-      'Participation aux rencontres handisport régionales',
-      'Temps de partage entre élèves neurotypiques et enfants TSA',
+      'Tarif adapté en fonction des fonds récoltés',
+      'Bilan annuel',
+      'Faciliter l\'accessibilité de la pratique sportive aux personnes atteintes du TSA',
     ],
     budget: 4200,
-    impact: ['1 créneau dédié hebdomadaire', 'Formateurs certifiés TSA', 'Partenariat avec 2 SESSAD locaux', 'Participation aux championnats handisport'],
+    impact: ['1 créneau dédié hebdomadaire', 'Formateurs certifiés TSA', 'Partenariats', 'Participation aux championnats handisport'],
   },
   'violences-femmes': {
     name: 'Lutte contre les violences faites aux femmes',
@@ -90,7 +90,6 @@ export default function CausePage() {
   const cause = CAUSES_DATA[slug]
   const [raised, setRaised] = useState(0)
   const [customAmt, setCustomAmt] = useState('')
-  const [donStatus, setDonStatus] = useState<'idle'|'loading'|'error'>('idle')
 
   useEffect(() => {
     fetch('/api/causes').then(r => r.json()).then(d => {
@@ -109,20 +108,13 @@ export default function CausePage() {
 
   const pct = Math.min(100, cause.goal > 0 ? Math.round((raised / cause.goal) * 100) : 0)
 
-  async function handleDonate(e: React.FormEvent) {
+  const HA_DON_URL = 'https://www.helloasso.com/associations/judo-club-panonnais/formulaires/1'
+
+  function handleDonate(e: React.FormEvent) {
     e.preventDefault()
     const amt = parseInt(customAmt)
     if (!amt || amt < 1) return
-    setDonStatus('loading')
-    try {
-      const res = await fetch('/api/donations/create', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: amt * 100, cause_slug: slug }),
-      })
-      const d = await res.json()
-      if (d.url) window.location.href = d.url
-      else setDonStatus('error')
-    } catch { setDonStatus('error') }
+    window.open(HA_DON_URL, '_blank')
   }
 
   return (
@@ -169,7 +161,7 @@ export default function CausePage() {
               <p className="text-gray-600 leading-relaxed text-lg">{cause.description}</p>
             </div>
             <div>
-              <h2 className="text-2xl font-black text-[#1e3a5f] mb-4">Nos actions concrètes</h2>
+              <h2 className="text-2xl font-black text-[#1e3a5f] mb-4">Nos leviers d'actions</h2>
               <ul className="space-y-3">
                 {cause.actions.map((a, i) => (
                   <li key={i} className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
@@ -180,7 +172,7 @@ export default function CausePage() {
               </ul>
             </div>
             <div>
-              <h2 className="text-2xl font-black text-[#1e3a5f] mb-4">Impact attendu</h2>
+              <h2 className="text-2xl font-black text-[#1e3a5f] mb-4">Objectifs</h2>
               <div className="grid sm:grid-cols-2 gap-4">
                 {cause.impact.map((imp, i) => (
                   <div key={i} className={`p-4 rounded-xl bg-gradient-to-br ${cause.color} text-white`}>
@@ -209,16 +201,15 @@ export default function CausePage() {
                     placeholder="Montant libre" min="1" className="input-field pr-8" />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">€</span>
                 </div>
-                <button type="submit" disabled={!customAmt || parseInt(customAmt) < 1 || donStatus === 'loading'}
+                <button type="submit" disabled={!customAmt || parseInt(customAmt) < 1}
                   className={`btn-primary w-full bg-gradient-to-r ${cause.color} disabled:opacity-50`}>
-                  {donStatus === 'loading' ? 'Redirection...' : `Donner ${customAmt ? customAmt+' €' : ''} →`}
+                  {`Donner ${customAmt ? customAmt+' €' : ''} →`}
                 </button>
-                {donStatus === 'error' && <p className="text-red-500 text-sm">Erreur. Réessayez.</p>}
               </form>
               <div className="mt-4 pt-4 border-t border-gray-100 space-y-2 text-sm text-gray-500">
                 <p>✅ Reçu fiscal automatique</p>
                 <p>💸 100% reversé au projet</p>
-                <p>🔒 Paiement sécurisé Stripe</p>
+                <p>🔒 Paiement sécurisé HelloAsso</p>
                 <p>📊 66% déductible (particuliers)</p>
               </div>
               <div className="mt-4 pt-4 border-t border-gray-100">
