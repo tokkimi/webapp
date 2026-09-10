@@ -2,7 +2,7 @@ export const CATEGORIES = {
   income: ['Consultations', 'Actes et soins', 'Prestations', 'Vente de produits', 'Formation', 'Autres recettes'],
   expense: ['Loyer et charges', 'Matériel et équipement', 'Consommables', 'Laboratoire et prothèses', 'Logiciels et abonnements', 'Assurances', 'Honoraires', 'Déplacements', 'Formation', 'Communication', 'Cotisations et taxes', 'Autres dépenses'],
 } as const
-export const PROFESSIONS = ['Médecin généraliste', 'Médecin spécialiste', 'Chirurgien-dentiste', 'Psychologue', 'Psychothérapeute', 'Psychiatre', 'Masseur-kinésithérapeute', 'Ostéopathe', 'Infirmier / Infirmière', 'Sage-femme', 'Orthophoniste', 'Ergothérapeute', 'Psychomotricien', 'Pédicure-podologue', 'Diététicien', 'Opticien', 'Coach', 'Praticien bien-être', 'Travailleur social', 'Autre profession']
+export const PROFESSIONS = ['Médecin généraliste', 'Médecin spécialiste', 'Psychologue', 'Psychothérapeute', 'Psychiatre', 'Masseur-kinésithérapeute', 'Ostéopathe', 'Infirmier / Infirmière', 'Sage-femme', 'Orthophoniste', 'Ergothérapeute', 'Psychomotricien', 'Pédicure-podologue', 'Diététicien', 'Opticien', 'Coach', 'Praticien bien-être', 'Travailleur social', 'Autre profession']
 export type FinanceEntry = {
   id: string; pro_id: string; kind: 'income' | 'expense'; label: string; category: string;
   amount_cents: number; tax_rate_bps: number; occurred_on: string; paid_on: string | null;

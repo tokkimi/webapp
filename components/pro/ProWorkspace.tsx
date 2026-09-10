@@ -27,6 +27,7 @@ export function ProIcon({ name, size = 20 }: { name: string; size?: number }) {
     wallet: <><rect x="3" y="5" width="18" height="15" rx="3"/><path d="M3 7V5a2 2 0 0 1 2-2h12M21 10h-6v5h6M17 12.5h.01"/></>,
     resources: <><path d="M5 3h11l4 4v14H5zM16 3v5h4M9 12h7M9 16h5"/></>,
     settings: <><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></>,
+    menu: <path d="M4 6h16M4 12h16M4 18h16"/>,
     arrow: <path d="M5 12h14M13 6l6 6-6 6"/>,
     plus: <path d="M12 5v14M5 12h14"/>,
   }
@@ -73,13 +74,14 @@ export default function ProWorkspace({ children }: { children: React.ReactNode }
   return <ProContext.Provider value={{ profile, practice, reloadPractice, request }}><div className="cp-root">
     <a href="#pro-content" className="cp-skip">Aller au contenu</a>
     {open && <button className="cp-backdrop" aria-label="Fermer le menu" onClick={() => setOpen(false)}/>}
-    <aside className={`cp-sidebar ${open ? 'is-open' : ''}`}>
+    <aside id="pro-menu" className={`cp-sidebar ${open ? 'is-open' : ''}`}>
       <Link className="cp-brand" href="/pro"><span className="cp-monogram">C</span><span>capsule<span className="cp-brand-pro">PRO</span><small>Votre cabinet, simplement.</small></span></Link>
       <nav aria-label="Navigation professionnelle">{NAV.map(item => <div key={item.href}>{item.group && <p className="cp-nav-group">{item.group}</p>}<Link href={item.href} className={`cp-nav-link ${pathname === item.href ? 'is-active' : ''}`} aria-current={pathname === item.href ? 'page' : undefined}><ProIcon name={item.icon}/>{item.label}</Link></div>)}</nav>
       <div className="cp-sidebar-bottom"><div className="cp-practice-badge"><span className="cp-status-dot"/><div><strong>{practice?.practice_name || profile.name}</strong><small>{practice?.profession || profile.specialty || 'Profession à renseigner'}</small></div></div><button onClick={async () => { const { error } = await supabase.auth.signOut(); if (error) setError('Déconnexion impossible. Réessayez.'); else router.replace('/auth') }}>Se déconnecter</button>{error && <small role="alert">{error}</small>}</div>
     </aside>
-    <div className="cp-body"><header className="cp-topbar"><div className="cp-topbar-left"><button className="cp-menu-toggle" aria-expanded={open} aria-label="Ouvrir le menu professionnel" onClick={() => setOpen(!open)}>☰</button><Link href="/pro">Tableau de bord</Link>{pathname !== '/pro' && <><span>/</span><strong>{current.label}</strong></>}</div><Link href="/pro/profile" className="cp-account"><span>{profile.name || 'Mon cabinet'}</span><b>{(profile.name || 'P').slice(0, 1).toUpperCase()}</b></Link></header>
+    <div className="cp-body"><header className="cp-topbar"><div className="cp-topbar-left"><button className="cp-menu-toggle" aria-expanded={open} aria-controls="pro-menu" aria-label={open ? 'Fermer le menu professionnel' : 'Ouvrir le menu professionnel'} onClick={() => setOpen(!open)}><ProIcon name="menu"/></button><Link href="/pro">Tableau de bord</Link>{pathname !== '/pro' && <><span>/</span><strong>{current.label}</strong></>}</div><Link href="/pro/profile" className="cp-account"><span>{profile.name || 'Mon cabinet'}</span><b>{(profile.name || 'P').slice(0, 1).toUpperCase()}</b></Link></header>
     <main id="pro-content" className="cp-main" tabIndex={-1}>{children}</main>
     <footer className="cp-footer">Capsule Pro <span>Un espace pour chaque pratique.</span><Link href="/pro">Retour au tableau de bord ↑</Link></footer></div>
+    <nav className="cp-mobile-nav" aria-label="Navigation mobile">{[{href:'/pro',label:'Accueil',icon:'overview'},{href:'/pro/agenda',label:'Agenda',icon:'calendar'},{href:'/pro/patients',label:'Patients',icon:'patients'},{href:'/pro/comptabilite',label:'Compta',icon:'wallet'}].map(item => <Link key={item.href} href={item.href} aria-current={pathname === item.href ? 'page' : undefined} className={pathname === item.href ? 'is-active' : ''}><ProIcon name={item.icon}/><span>{item.label}</span></Link>)}<button aria-controls="pro-menu" aria-expanded={open} onClick={() => setOpen(!open)}><ProIcon name="menu"/><span>{open ? 'Fermer' : 'Plus'}</span></button></nav>
   </div></ProContext.Provider>
 }
